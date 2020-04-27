@@ -7,7 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		644A056C2456BC5D00BA3644 /* BeatTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644A056B2456BC5D00BA3644 /* BeatTimer.swift */; };
 		64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FA0DD92451F0BA009A46B9 /* main.swift */; };
+		64FA0DE52451F1B1009A46B9 /* libYeelightController.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64FA0DE12451F1B1009A46B9 /* libYeelightController.a */; };
+		64FA0DE72451F57E009A46B9 /* x86_64.swiftdoc in Frameworks */ = {isa = PBXBuildFile; fileRef = 64FA0DE32451F1B1009A46B9 /* x86_64.swiftdoc */; };
+		64FA0DE82451F580009A46B9 /* x86_64.swiftmodule in Frameworks */ = {isa = PBXBuildFile; fileRef = 64FA0DE42451F1B1009A46B9 /* x86_64.swiftmodule */; };
+		64FA0E2524520EA6009A46B9 /* BluetoothLE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,8 +28,13 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		644A056B2456BC5D00BA3644 /* BeatTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatTimer.swift; sourceTree = "<group>"; };
 		64FA0DD62451F0BA009A46B9 /* HeartLight */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HeartLight; sourceTree = BUILT_PRODUCTS_DIR; };
 		64FA0DD92451F0BA009A46B9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		64FA0DE12451F1B1009A46B9 /* libYeelightController.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libYeelightController.a; sourceTree = "<group>"; };
+		64FA0DE32451F1B1009A46B9 /* x86_64.swiftdoc */ = {isa = PBXFileReference; lastKnownFileType = file; path = x86_64.swiftdoc; sourceTree = "<group>"; };
+		64FA0DE42451F1B1009A46B9 /* x86_64.swiftmodule */ = {isa = PBXFileReference; lastKnownFileType = file; path = x86_64.swiftmodule; sourceTree = "<group>"; };
+		64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothLE.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				64FA0DE52451F1B1009A46B9 /* libYeelightController.a in Frameworks */,
+				64FA0DE72451F57E009A46B9 /* x86_64.swiftdoc in Frameworks */,
+				64FA0DE82451F580009A46B9 /* x86_64.swiftmodule in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -41,8 +54,10 @@
 		64FA0DCD2451F0BA009A46B9 = {
 			isa = PBXGroup;
 			children = (
+				64FA0DE02451F1B1009A46B9 /* lib */,
 				64FA0DD82451F0BA009A46B9 /* HeartLight */,
 				64FA0DD72451F0BA009A46B9 /* Products */,
+				64FA0DE62451F57E009A46B9 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -58,8 +73,35 @@
 			isa = PBXGroup;
 			children = (
 				64FA0DD92451F0BA009A46B9 /* main.swift */,
+				64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */,
+				644A056B2456BC5D00BA3644 /* BeatTimer.swift */,
 			);
 			path = HeartLight;
+			sourceTree = "<group>";
+		};
+		64FA0DE02451F1B1009A46B9 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				64FA0DE12451F1B1009A46B9 /* libYeelightController.a */,
+				64FA0DE22451F1B1009A46B9 /* YeelightController.swiftmodule */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		64FA0DE22451F1B1009A46B9 /* YeelightController.swiftmodule */ = {
+			isa = PBXGroup;
+			children = (
+				64FA0DE32451F1B1009A46B9 /* x86_64.swiftdoc */,
+				64FA0DE42451F1B1009A46B9 /* x86_64.swiftmodule */,
+			);
+			path = YeelightController.swiftmodule;
+			sourceTree = "<group>";
+		};
+		64FA0DE62451F57E009A46B9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -120,6 +162,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */,
+				644A056C2456BC5D00BA3644 /* BeatTimer.swift in Sources */,
+				64FA0E2524520EA6009A46B9 /* BluetoothLE.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -246,7 +290,12 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UK6M8ZDXSG;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/lib";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -256,7 +305,12 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = UK6M8ZDXSG;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/lib",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "$(PROJECT_DIR)/lib";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
