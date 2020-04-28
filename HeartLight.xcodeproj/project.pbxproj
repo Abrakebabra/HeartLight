@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		643C418224589C1B00806D0F /* BeatModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643C418124589C1B00806D0F /* BeatModifier.swift */; };
 		644A056C2456BC5D00BA3644 /* BeatTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644A056B2456BC5D00BA3644 /* BeatTimer.swift */; };
 		64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FA0DD92451F0BA009A46B9 /* main.swift */; };
 		64FA0DE52451F1B1009A46B9 /* libYeelightController.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64FA0DE12451F1B1009A46B9 /* libYeelightController.a */; };
@@ -28,6 +29,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		643C418124589C1B00806D0F /* BeatModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatModifier.swift; sourceTree = "<group>"; };
 		644A056B2456BC5D00BA3644 /* BeatTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatTimer.swift; sourceTree = "<group>"; };
 		64FA0DD62451F0BA009A46B9 /* HeartLight */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HeartLight; sourceTree = BUILT_PRODUCTS_DIR; };
 		64FA0DD92451F0BA009A46B9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
@@ -75,6 +77,7 @@
 				64FA0DD92451F0BA009A46B9 /* main.swift */,
 				64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */,
 				644A056B2456BC5D00BA3644 /* BeatTimer.swift */,
+				643C418124589C1B00806D0F /* BeatModifier.swift */,
 			);
 			path = HeartLight;
 			sourceTree = "<group>";
@@ -161,6 +164,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				643C418224589C1B00806D0F /* BeatModifier.swift in Sources */,
 				64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */,
 				644A056C2456BC5D00BA3644 /* BeatTimer.swift in Sources */,
 				64FA0E2524520EA6009A46B9 /* BluetoothLE.swift in Sources */,
