@@ -9,6 +9,9 @@
 import Foundation
 
 
+
+
+
 struct BrightnessModifier {
     // brightness parameter cannot be 0 if reduced by range between max and min, so must be 51, not 50.
     static let brightnessMax: Float = 100.0
@@ -97,18 +100,8 @@ struct ColorModifier {
 
 
 
-struct BeatPointTimingModifier {
-    let point1Timing: Float = 0.3
-    let point2Timing: Float = 0.3
-    let point3Timing: Float = 0.4
-    
-    func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int) {
-        
-        return (Int(self.point1Timing * totalBeatMS),
-                Int(self.point2Timing * totalBeatMS),
-                Int(self.point3Timing * totalBeatMS))
-    }
-}
+
+
 
 
 
@@ -117,7 +110,7 @@ class BeatModifier {
     // var bpm read and write from different threads
     let semaphore = DispatchSemaphore(value: 1)
     
-    var bpm: Float? {
+    var bpm: Float? = 80.0 {
         willSet {
             self.semaphore.wait()
         }
@@ -174,7 +167,6 @@ class BeatModifier {
     // the three major modifiers
     var brightnessModifier: BrightnessModifier
     var colorModifier: ColorModifier
-    var beatPointTimingModifier: BeatPointTimingModifier
     
     
     // current brightness and color
@@ -184,7 +176,6 @@ class BeatModifier {
         
         self.brightnessModifier = BrightnessModifier(brightnessOriginal)
         self.colorModifier = ColorModifier(redOriginal, greenOriginal, blueOriginal)
-        self.beatPointTimingModifier = BeatPointTimingModifier()
     } // init
     
     
@@ -205,15 +196,34 @@ class BeatModifier {
     } // BeatModiier.editThresholds()
     
     
-    /// Brightness(Baseline, Amplitude), Color(R, G, B), BeatPointTiming(ms, ms, ms, ms, ms) - Note:  A 6th beat should slowly change to the original light color while the light waits for the next beat.
-    func modifyBeat() -> ((Float, Float), (Int, Int, Int), (Int, Int, Int))? {
+    func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int, Int, Int) {
+        
+        return (Int(0.15 * totalBeatMS), // lub
+                Int(0.18 * totalBeatMS),  // or 0.2
+                Int(0.15 * totalBeatMS), // dub
+                Int(0.30 * totalBeatMS),
+                Int(0.22 * totalBeatMS)) // do I want a slight rise?  or 0.2
+    }
+    
+    
+    /// (rgb, brightness, duration)
+    func modifyBeat() -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int),
+        (Int, Int, Int), (Int, Int, Int))? {
         
         if let stressScore = self.stressScore, let beatMS = self.beatms {
+            
+            
+            
+            
             let brightness = self.brightnessModifier.brightness(stressScore)
             let color = self.colorModifier.color(stressScore)
-            let timing = self.beatPointTimingModifier.milliSecPoints(beatMS)
+            let timing = self.milliSecPoints(beatMS)
             
-            return (brightness, color, timing)
+            
+            
+            
+            
+            return
             
         } else {
             return nil

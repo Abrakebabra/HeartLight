@@ -18,6 +18,8 @@ class BeatTimer {
     
     // accessed by semaphore by either bluetooth or timer?
     var bpm: Int = 30
+    
+    
     var microsecondsBetweenBeats: UInt32 {
         get {
             self.bpmSemaphore.wait()

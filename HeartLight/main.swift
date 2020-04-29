@@ -11,9 +11,9 @@ import Foundation
 import YeelightController
 
 let bleController = BLEController()
-bleController.start()
+// bleController.start()
 let controller = LightController()
-controller.discover(wait: .lightCount(7))
+controller.discover(wait: .lightCount(6))
 let beatTimer = BeatTimer()
 var runProgram = true
 
@@ -26,7 +26,7 @@ for (_, light) in controller.lights {
     let g = rgb.1
     let b = rgb.2
     
-    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 90, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
+    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
@@ -36,7 +36,7 @@ for (_, light) in controller.lights {
 
 bleController.bpmReceived = {
     (bpm) in
-    print("BPM from closure: \(bpm)")
+    //print("BPM from closure: \(bpm)")
     if bpm > 0 {
         beatTimer.setBPM(bpm: bpm)
         for i in lightMods {
@@ -65,6 +65,48 @@ bleController.bpmReceived = {
  */
 
 
+func singleBeat() {
+    beatQueue.async {
+        for i in lightMods {
+            if let mod = i.mod.modifyBeat() {
+                print(i.mod.bpm)
+                let brightnessBaseline = mod.0.0
+                let brightnessAmplitude = mod.0.1
+                let r = mod.1.0
+                let g = mod.1.1
+                let b = mod.1.2
+                let rgbInt = ColorConverter().rgbTupleToInt(r: r, g: g, b: b)
+                let point1 = mod.2.0
+                let point1Bright = Int(brightnessBaseline - brightnessAmplitude * 1.0)
+                let point2 = mod.2.1
+                let point2Bright = Int(brightnessBaseline + brightnessAmplitude * 1.0)
+                let point3 = mod.2.2
+                let point3Bright = Int(brightnessBaseline)
+                let point4 = mod.2.3
+                let point5 = mod.2.4
+                // let point6 = 3000
+                // let point6Bright = i.light.state.brightness
+                let point6Color = i.light.state.rgb
+                do {
+                    var expressions = LightCommand.flowStart.CreateExpressions()
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: 20, duration: point1))
+                    print(point1)
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: 1, duration: point2))
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: 100, duration: point3))
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: 1, duration: point4))
+                    try expressions.addState(expression: .wait(duration: point5))
+                    // try expressions.addState(expression: .rgb(rgb: point6Color, brightness: point6Bright, duration: point6))
+                    let message = try LightCommand.flowStart(numOfStateChanges: .finite(count:25), whenComplete: .returnPrevious, flowExpression: expressions).string()
+                    
+                    i.light.communicate(message)
+                }
+                catch let error {
+                    print(error)
+                }
+            }
+        }
+    }
+}
 
 
 let beatQueue = DispatchQueue(label: "Beat Queue")
@@ -136,7 +178,8 @@ func musicOff() {
     }
 }
 
-
+usleep(200000)
+musicOn()
 
 while runProgram == true {
     print("Awaiting input")
@@ -147,8 +190,8 @@ while runProgram == true {
         musicOn()
         beatTimer.timer()
         
-    case "timer":
-        beatTimer.timer()
+    case "beat":
+        singleBeat()
         
     case "stop":
         musicOff()
