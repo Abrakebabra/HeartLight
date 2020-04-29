@@ -19,7 +19,17 @@ let controller = LightController()
 let beatTimer = BeatTimer()
 
 
+var beatMods: [String : BeatModifier] = [:]
 
+
+for (id, light) in controller.lights {
+    let rgb = ColorConverter().rgbIntToTuple(rgb: light.state.rgb)
+    let r = rgb.0
+    let g = rgb.1
+    let b = rgb.2
+    
+    beatMods[id] = BeatModifier(bpmLowThreshold: 65, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
+}
 
 
 
@@ -27,7 +37,9 @@ let beatTimer = BeatTimer()
 bleController.bpmReceived = {
     (bpm) in
     print("BPM from closure: \(bpm)")
-    beatTimer.setBPM(bpm: bpm)
+    for (_, mod) in beatMods {
+        mod.updateBPM(bpm: bpm)
+    }
 }
 
 
