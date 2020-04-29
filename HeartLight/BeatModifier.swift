@@ -39,26 +39,80 @@ class BeatModifier {
         } // get
     } // var stressFactor
     
-    var brightnessNoMod: Int
-    let brightnessMax: Int = 100
-    let brightnessMin: Int = 51     // brightness parameter cannot be 0.
-    let brightnessRange: Int        // set in init
+    
+    var beatms: Float {
+        get {
+            self.semaphore.wait()
+            
+            defer {
+                self.semaphore.signal()
+            }
+            
+            return (60.0 / (self.bpm ?? -1.0) * 1000.0)
+        }
+    } // var beatms
+    
+    
+    var brightnessOriginal: Float
+    static let brightnessMax: Float = 100.0
+    static let brightnessHighThreshold: Float = 51.0     // brightness parameter cannot be 0 if reduced by range between max and min, so must be 51, not 50.
+    static let maxAmplitude: Float = brightnessMax - brightnessHighThreshold
+    
+    
+    var movementRange: Float
+    
+    let point1Timing: Float = 0.4
+    let point2Timing: Float = 0.1
+    let point3Timing: Float = 0.2
+    let point4Timing: Float = 0.1
+    let point5Timing: Float = 0.2
+    
+    
+    var redOriginal: Float
+    var greenOriginal: Float
+    var blueOriginal: Float
+    let blueMultiplier: Float = 1.5
     
     
     
     // current brightness and color
-    init(bpmLowThreshold: Int, bpmHighThreshold: Int, brightnessNoMod: Int) {
+    init(bpmLowThreshold: Int, bpmHighThreshold: Int, brightnessOriginal: Int, redOriginal: Int, greenOriginal: Int, blueOriginal: Int) {
         self.bpmLowThreshold = Float(bpmLowThreshold)
         self.bpmHighThreshold = Float(bpmHighThreshold)
         
-        self.brightnessRange = self.brightnessMax - self.brightnessMin
+        self.brightnessOriginal = Float(brightnessOriginal)
         
-        self.brightnessNoMod = brightnessNoMod
+        
+        if brightnessOriginal >= 51 {
+            self.movementRange = self.brightnessOriginal - BeatModifier.brightnessHighThreshold
+        } else {
+            self.movementRange = BeatModifier.brightnessHighThreshold - self.brightnessOriginal
+        }
+        
+        self.redOriginal = Float(redOriginal)
+        self.greenOriginal = Float(greenOriginal)
+        self.blueOriginal = Float(blueOriginal)
+        
     }
     
     
     func updateBPM(bpm: Int) {
         self.bpm = Float(bpm)
+    }
+    
+    
+    func updateLightsOriginal(brightness: Int, redOriginal: Int, greenOriginal: Int, blueOriginal: Int) {
+        self.brightnessOriginal = Float(brightness)
+        
+        if brightness >= 51 {
+            self.movementRange = self.brightnessOriginal - BeatModifier.brightnessHighThreshold
+        } else {
+            self.movementRange = BeatModifier.brightnessHighThreshold - self.brightnessOriginal
+        }
+        
+        self.redOriginal = Float(redOriginal)
+        self.greenOriginal = Float(greenOriginal)
+        self.blueOriginal = Float(blueOriginal)
     }
     
     
@@ -68,22 +122,52 @@ class BeatModifier {
     }
     
     
-    func beatMicroSeconds() -> UInt32 {
-        return UInt32(60.0 / (self.bpm ?? -1.0) * 1000000.0)
-    }
     
     
-    func beatMilliSeconds() -> Int {
-        return Int(60.0 / (self.bpm ?? -1.0) * 1000.0)
-    }
-    
-    
-    func brightness() {
+    /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
+    func brightness() -> (Int, Int) {
         
+        let stressScore = self.stressScore
+        
+        let amplitude = Int(stressScore * Float(BeatModifier.maxAmplitude))
+        
+        if self.brightnessOriginal >= 51 {
+            let brightnessBaseline = Int(self.brightnessOriginal - stressScore * self.movementRange)
+            return (brightnessBaseline, amplitude)
+            
+        } else {
+            let brightnessBaseline = Int(self.brightnessOriginal + stressScore * self.movementRange)
+            return (brightnessBaseline, amplitude)
+        }
     }
     
     
     
+    func milliSecPoints() -> (Int, Int, Int, Int, Int) {
+        let totalBeatMS: Float = self.beatms
+        
+        return (Int(self.point1Timing * totalBeatMS),
+                Int(self.point2Timing * totalBeatMS),
+                Int(self.point3Timing * totalBeatMS),
+                Int(self.point4Timing * totalBeatMS),
+                Int(self.point5Timing * totalBeatMS))
+    }
+    
+    
+    
+    func color() -> (Int, Int, Int) {
+        let stressScore = self.stressScore
+        
+        var blue = self.blueOriginal - (stressScore * self.blueOriginal * self.blueMultiplier)
+        
+        if blue < 0.0 {
+            blue = 0.0
+        }
+        
+        return (Int(self.redOriginal + (stressScore * (255.0 - self.redOriginal))),
+                Int(self.greenOriginal - (stressScore * self.greenOriginal)),
+                Int(blue))
+    }
     
     
 }
