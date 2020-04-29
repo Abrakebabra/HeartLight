@@ -125,9 +125,7 @@ class BeatModifier {
     
     
     /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
-    func brightness() -> (Int, Int) {
-        
-        let stressScore = self.stressScore
+    func brightness(stressScore: Float) -> (Int, Int) {
         
         let amplitude = Int(stressScore * Float(BeatModifier.maxAmplitude))
         
@@ -143,8 +141,7 @@ class BeatModifier {
     
     
     
-    func milliSecPoints() -> (Int, Int, Int, Int, Int) {
-        let totalBeatMS: Float = self.beatms
+    func milliSecPoints(totalBeatMS: Float) -> (Int, Int, Int, Int, Int) {
         
         return (Int(self.point1Timing * totalBeatMS),
                 Int(self.point2Timing * totalBeatMS),
@@ -155,8 +152,7 @@ class BeatModifier {
     
     
     
-    func color() -> (Int, Int, Int) {
-        let stressScore = self.stressScore
+    func color(stressScore: Float) -> (Int, Int, Int) {
         
         var blue = self.blueOriginal - (stressScore * self.blueOriginal * self.blueMultiplier)
         
@@ -169,5 +165,16 @@ class BeatModifier {
                 Int(blue))
     }
     
+    
+    func beatProperties() -> ((Int, Int), (Int, Int, Int), (Int, Int, Int, Int, Int)){
+        let stressScore = self.stressScore
+        let beatMS = self.beatms
+        
+        let brightness = self.brightness(stressScore: stressScore)
+        let color = self.color(stressScore: stressScore)
+        let timing = milliSecPoints(totalBeatMS: beatMS)
+        
+        return (brightness, color, timing)
+    }
     
 }
