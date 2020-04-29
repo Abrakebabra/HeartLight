@@ -11,24 +11,24 @@ import Foundation
 import YeelightController
 
 let bleController = BLEController()
-
-
-
+bleController.start()
 let controller = LightController()
-
+controller.discover(wait: .lightCount(7))
 let beatTimer = BeatTimer()
+var runProgram = true
 
 
-var beatMods: [String : BeatModifier] = [:]
+var lightMods: [LightModPair] = []
 
-
-for (id, light) in controller.lights {
+for (_, light) in controller.lights {
     let rgb = ColorConverter().rgbIntToTuple(rgb: light.state.rgb)
     let r = rgb.0
     let g = rgb.1
     let b = rgb.2
     
-    beatMods[id] = BeatModifier(bpmLowThreshold: 65, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
+    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 90, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
+    
+    lightMods.append(LightModPair(light: light, mod: beatMod))
 }
 
 
@@ -37,41 +37,72 @@ for (id, light) in controller.lights {
 bleController.bpmReceived = {
     (bpm) in
     print("BPM from closure: \(bpm)")
-    for (_, mod) in beatMods {
-        mod.updateBPM(bpm: bpm)
+    if bpm > 0 {
+        beatTimer.setBPM(bpm: bpm)
+        for i in lightMods {
+            i.mod.updateBPM(bpm: bpm)
+        }
     }
+    
 }
 
 
+/*
+ var bright: String = ""
+ var dim: String = ""
+ 
+ 
+ // Could send a color flow set for 1 cycle and end it on the last state.
+ 
+ 
+ do {
+ bright = try LightCommand.brightness(brightness: 100, effect: .smooth, duration: 100).string()
+ dim = try LightCommand.brightness(brightness: 50, effect: .smooth, duration: 200).string()
+ }
+ catch let error {
+ print(error)
+ }
+ */
 
 
-var bright: String = ""
-var dim: String = ""
-
-
-// Could send a color flow set for 1 cycle and end it on the last state.
-
-
-do {
-    bright = try LightCommand.brightness(brightness: 100, effect: .smooth, duration: 100).string()
-    dim = try LightCommand.brightness(brightness: 50, effect: .smooth, duration: 200).string()
-}
-catch let error {
-    print(error)
-}
 
 
 let beatQueue = DispatchQueue(label: "Beat Queue")
 
 beatTimer.beat = {
     beatQueue.async {
-        for (_, v) in controller.lights {
-            v.communicate(bright)
-        }
-        usleep(100000)
-        
-        for (_, v) in controller.lights {
-            v.communicate(dim)
+        for i in lightMods {
+            if let mod = i.mod.modifyBeat() {
+                let brightnessBaseline = mod.0.0
+                let brightnessAmplitude = mod.0.1
+                let r = mod.1.0
+                let g = mod.1.1
+                let b = mod.1.2
+                let rgbInt = ColorConverter().rgbTupleToInt(r: r, g: g, b: b)
+                let point1 = mod.2.0
+                let point1Bright = Int(brightnessBaseline - brightnessAmplitude * 1.0)
+                let point2 = mod.2.1
+                let point2Bright = Int(brightnessBaseline + brightnessAmplitude * 1.0)
+                let point3 = mod.2.2
+                let point3Bright = Int(brightnessBaseline)
+                // let point6 = 3000
+                // let point6Bright = i.light.state.brightness
+                let point6Color = i.light.state.rgb
+                
+                do {
+                    var expressions = LightCommand.flowStart.CreateExpressions()
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: point1Bright, duration: point1))
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: point2Bright, duration: point2))
+                    try expressions.addState(expression: .rgb(rgb: point6Color, brightness: point3Bright, duration: point3))
+                    // try expressions.addState(expression: .rgb(rgb: point6Color, brightness: point6Bright, duration: point6))
+                    let message = try LightCommand.flowStart(numOfStateChanges: .finite(count:3), whenComplete: .returnPrevious, flowExpression: expressions).string()
+                    
+                    i.light.communicate(message)
+                }
+                catch let error {
+                    print(error)
+                }
+            }
         }
     }
 }
@@ -105,26 +136,21 @@ func musicOff() {
     }
 }
 
-var runProgram = true
+
 
 while runProgram == true {
     print("Awaiting input")
     let input: String? = readLine()
     
     switch input {
-    case "hrm":
-        bleController.start()
-        
-    case "lights":
-        controller.discover(wait: .lightCount(6))
+    case "go!":
+        musicOn()
+        beatTimer.timer()
         
     case "timer":
         beatTimer.timer()
         
-    case "musicOn":
-        musicOn()
-        
-    case "musicOff":
+    case "stop":
         musicOff()
         
     case "exit":

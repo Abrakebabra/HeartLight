@@ -31,16 +31,16 @@ struct BrightnessModifier {
     
     
     /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
-    func brightness(_ stressScore: Float) -> (Int, Int) {
+    func brightness(_ stressScore: Float) -> (Float, Float) {
         
-        let amplitude = Int(stressScore * Float(BrightnessModifier.brightnessMaxAmplitude))
+        let amplitude = stressScore * Float(BrightnessModifier.brightnessMaxAmplitude)
         
         if self.brightnessOriginal >= 51 {
-            let brightnessBaseline = Int(self.brightnessOriginal - stressScore * self.brightnessMovementRange)
+            let brightnessBaseline = self.brightnessOriginal - stressScore * self.brightnessMovementRange
             return (brightnessBaseline, amplitude)
             
         } else {
-            let brightnessBaseline = Int(self.brightnessOriginal + stressScore * self.brightnessMovementRange)
+            let brightnessBaseline = self.brightnessOriginal + stressScore * self.brightnessMovementRange
             return (brightnessBaseline, amplitude)
         }
     } // BrightnessModifier.brightness
@@ -98,19 +98,15 @@ struct ColorModifier {
 
 
 struct BeatPointTimingModifier {
-    let point1Timing: Float = 0.4
-    let point2Timing: Float = 0.1
-    let point3Timing: Float = 0.2
-    let point4Timing: Float = 0.1
-    let point5Timing: Float = 0.2
+    let point1Timing: Float = 0.3
+    let point2Timing: Float = 0.3
+    let point3Timing: Float = 0.4
     
-    func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int, Int, Int) {
+    func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int) {
         
         return (Int(self.point1Timing * totalBeatMS),
                 Int(self.point2Timing * totalBeatMS),
-                Int(self.point3Timing * totalBeatMS),
-                Int(self.point4Timing * totalBeatMS),
-                Int(self.point5Timing * totalBeatMS))
+                Int(self.point3Timing * totalBeatMS))
     }
 }
 
@@ -210,7 +206,7 @@ class BeatModifier {
     
     
     /// Brightness(Baseline, Amplitude), Color(R, G, B), BeatPointTiming(ms, ms, ms, ms, ms) - Note:  A 6th beat should slowly change to the original light color while the light waits for the next beat.
-    func modifyBeat() -> ((Int, Int), (Int, Int, Int), (Int, Int, Int, Int, Int))? {
+    func modifyBeat() -> ((Float, Float), (Int, Int, Int), (Int, Int, Int))? {
         
         if let stressScore = self.stressScore, let beatMS = self.beatms {
             let brightness = self.brightnessModifier.brightness(stressScore)
