@@ -13,24 +13,20 @@ import YeelightController
 let bleController = BLEController()
 bleController.start()
 let controller = LightController()
-controller.discover(wait: .lightCount(1))
+controller.discover(wait: .lightCount(7))
 let beatTimer = BeatTimer()
 var runProgram = true
 
 
 var lightMods: [LightModPair] = []
 
+
 for (_, light) in controller.lights {
-    let rgb = ColorConverter().rgbIntToTuple(rgb: light.state.rgb)
-    let r = rgb.0
-    let g = rgb.1
-    let b = rgb.2
     
-    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, redOriginal: r, greenOriginal: g, blueOriginal: b)
+    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
-
 
 
 
@@ -49,7 +45,6 @@ bleController.bpmReceived = {
 
 
 
-
 let beatQueue = DispatchQueue(label: "Beat Queue")
 
 beatTimer.beat = {
@@ -65,21 +60,16 @@ beatTimer.beat = {
             let p5Col = i.light.state.rgb
             let p5Dur = 5000
             
-            print(p0)
-            print(p1)
-            print(p2)
-            print(p3)
-            print(p4)
-            
             do {
-                var expressions = LightCommand.flowStart.CreateExpressions()
-                try expressions.addState(expression: .rgb(rgb: p0.0, brightness: p0.1, duration: p0.2))
-                try expressions.addState(expression: .rgb(rgb: p1.0, brightness: p1.1, duration: p1.2))
-                try expressions.addState(expression: .rgb(rgb: p2.0, brightness: p2.1, duration: p2.2))
-                try expressions.addState(expression: .rgb(rgb: p3.0, brightness: p3.1, duration: p3.2))
-                try expressions.addState(expression: .rgb(rgb: p4.0, brightness: p4.1, duration: p4.2))
-                try expressions.addState(expression: .rgb(rgb: p5Col, brightness: p5Brt, duration: p5Dur))
-                let message = try LightCommand.flowStart(numOfStateChanges: .finite(count:6), whenComplete: .returnPrevious, flowExpression: expressions).string()
+                 var expressions = LightCommand.flowStart.CreateExpressions()
+                 try expressions.addState(expression: .rgb(rgb: p0.0, brightness: p0.1, duration: p0.2))
+                 try expressions.addState(expression: .rgb(rgb: p1.0, brightness: p1.1, duration: p1.2))
+                 try expressions.addState(expression: .rgb(rgb: p2.0, brightness: p2.1, duration: p2.2))
+                 try expressions.addState(expression: .rgb(rgb: p3.0, brightness: p3.1, duration: p3.2))
+                 try expressions.addState(expression: .rgb(rgb: p4.0, brightness: p4.1, duration: p4.2))
+                 try expressions.addState(expression: .rgb(rgb: p5Col, brightness: p5Brt, duration: p5Dur))
+                 
+                 let message = try LightCommand.flowStart(numOfStateChanges: .finite(count:6), whenComplete: .returnPrevious, flowExpression: expressions).string()
                 
                 i.light.communicate(message)
             }
@@ -125,7 +115,7 @@ while runProgram == true {
     let input: String? = readLine()
     
     switch input {
-    case "go!":
+    case "go":
         musicOn()
         beatTimer.timer()
         

@@ -14,34 +14,33 @@ import Foundation
 
 struct BrightnessModifier {
     // brightness parameter cannot be 0 if reduced by range between max and min, so must be 51, not 50.
-    static let brightnessMax: Float = 100.0
-    static let brightnessMin: Float = 1.0
-    static let brightnessMaxAmplitude: Float = brightnessMax - brightnessMin
-    var brightnessOriginal: Float
-    var brightnessMovementRange: Float
+    static let max: Float = 100.0
+    static let min: Float = 1.0
+    static let maxPulse: Float = max - min
+    var original: Float
+    var baseRange: Float
     
     
-    init(_ brightnessOriginal: Int) {
-        self.brightnessOriginal = Float(brightnessOriginal)
-        
-        self.brightnessMovementRange = self.brightnessOriginal - BrightnessModifier.brightnessMin
+    init(_ original: Int) {
+        self.original = Float(original)
+        self.baseRange = self.original - BrightnessModifier.min
     } // init
     
     
     /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
-    func brightness(_ stressScore: Float) -> Int {
+    func brightness(_ stressScore: Float, _ pulseProportion: Float) -> Int {
         
-        let amplitude = stressScore * Float(BrightnessModifier.brightnessMaxAmplitude)
-        let brightnessBaseline = self.brightnessOriginal - stressScore * self.brightnessMovementRange
+        let maxPulse = stressScore * Float(BrightnessModifier.maxPulse)
+        let baseline = self.original - stressScore * self.baseRange
         
-        return Int(brightnessBaseline + amplitude)
+        return Int(baseline + maxPulse * pulseProportion)
     } // BrightnessModifier.brightness
     
     
     /// Update the brightness of the light before any modification
     mutating func updateOriginalValues(_ brightness: Int) {
-        self.brightnessOriginal = Float(brightness)
-        self.brightnessMovementRange = self.brightnessOriginal - BrightnessModifier.brightnessMin
+        self.original = Float(brightness)
+        self.baseRange = self.original - BrightnessModifier.min
     }
     
 } // struct BrightnessModifier
@@ -56,10 +55,10 @@ struct ColorModifier {
     
     
     
-    init(_ redOriginal: Int, _ greenOriginal: Int, _ blueOriginal: Int) {
-        self.redOriginal = Float(redOriginal)
-        self.greenOriginal = Float(greenOriginal)
-        self.blueOriginal = Float(blueOriginal)
+    init(_ rgb: Int) {
+        self.redOriginal = Float(rgb >> 16)
+        self.greenOriginal = Float((rgb & 0b000000001111111100000000) >> 8)
+        self.blueOriginal = Float(rgb & 0b000000000000000011111111)
     }
     
     
@@ -73,10 +72,10 @@ struct ColorModifier {
     }
     
     
-    mutating func updateOriginalValues(_ redOriginal: Int, _ greenOriginal: Int, _ blueOriginal: Int) {
-        self.redOriginal = Float(redOriginal)
-        self.greenOriginal = Float(greenOriginal)
-        self.blueOriginal = Float(blueOriginal)
+    mutating func updateOriginalValues(_ rgb: Int) {
+        self.redOriginal = Float(rgb >> 16)
+        self.greenOriginal = Float((rgb & 0b000000001111111100000000) >> 8)
+        self.blueOriginal = Float(rgb & 0b000000000000000011111111)
     }
 }
 
@@ -84,17 +83,18 @@ struct ColorModifier {
 
 
 class BeatModifier {
+    
+    var bpmPrev: Float = 70.0
     // read and write from different threads.
     let bpmSemaphore = DispatchSemaphore(value: 1)
     // current and previous bpm
     var bpm: [Float] = [70.0, 70.0] {
         willSet {
             bpmSemaphore.wait()
-            self.bpm[1] = self.bpm[0]
         }
         didSet {
+            self.bpmPrev = self.bpm[0]
             bpmSemaphore.signal()
-            print(bpm)
         }
     }
     
@@ -106,12 +106,12 @@ class BeatModifier {
     
     
     // current brightness and color
-    init(bpmLowThreshold: Int, bpmHighThreshold: Int, brightnessOriginal: Int, redOriginal: Int, greenOriginal: Int, blueOriginal: Int) {
+    init(bpmLowThreshold: Int, bpmHighThreshold: Int, brightnessOriginal: Int, rgb: Int) {
         self.bpmLowThreshold = Float(bpmLowThreshold)
         self.bpmHighThreshold = Float(bpmHighThreshold)
         
         self.brightnessModifier = BrightnessModifier(brightnessOriginal)
-        self.colorModifier = ColorModifier(redOriginal, greenOriginal, blueOriginal)
+        self.colorModifier = ColorModifier(rgb)
     } // init
     
     
@@ -142,13 +142,13 @@ class BeatModifier {
     }
     
     func updateBPM(bpm: Int) {
-        self.bpm[0] = Float(bpm)
+        self.bpm = [Float(bpm), self.bpmPrev]
     } // BeatModifier.updateBPM()
     
     
-    func updateLightsOriginal(brightness: Int, redOriginal: Int, greenOriginal: Int, blueOriginal: Int) {
+    func updateLightsOriginal(brightness: Int, rgb: Int) {
         self.brightnessModifier.updateOriginalValues(brightness)
-        self.colorModifier.updateOriginalValues(redOriginal, greenOriginal, blueOriginal)
+        self.colorModifier.updateOriginalValues(rgb)
     } // BeatModifier.updateLightsOriginal()
     
     
@@ -169,11 +169,11 @@ class BeatModifier {
     
     
     
-    func pointMods(stressScore: Float, _ beatMilliSec: Float, beatProportion: Float) -> (Int, Int, Int) {
+    func pointMods(_ stressScore: Float, _ beatMilliSec: Float, beatProportion: Float, pulseProportion: Float) -> (Int, Int, Int) {
         
         return (
             self.colorModifier.color(stressScore),
-            self.brightnessModifier.brightness(stressScore),
+            self.brightnessModifier.brightness(stressScore, pulseProportion),
             Int(beatMilliSec * beatProportion)
         )
     }
@@ -196,11 +196,11 @@ class BeatModifier {
         let ss4: Float = stressScores.4
         
         return (
-        self.pointMods(stressScore: ss0, beatMilliSec, beatProportion: 0.15),
-        self.pointMods(stressScore: ss1, beatMilliSec, beatProportion: 0.18),
-        self.pointMods(stressScore: ss2, beatMilliSec, beatProportion: 0.15),
-        self.pointMods(stressScore: ss3, beatMilliSec, beatProportion: 0.30),
-        self.pointMods(stressScore: ss4, beatMilliSec, beatProportion: 0.22)
+        self.pointMods(ss0, beatMilliSec, beatProportion: 0.15, pulseProportion: 0.3),
+        self.pointMods(ss1, beatMilliSec, beatProportion: 0.18, pulseProportion: 0.0),
+        self.pointMods(ss2, beatMilliSec, beatProportion: 0.15, pulseProportion: 1.0),
+        self.pointMods(ss3, beatMilliSec, beatProportion: 0.30, pulseProportion: 0.0),
+        self.pointMods(ss4, beatMilliSec, beatProportion: 0.22, pulseProportion: 0.0)
         )
     } // BeatModifier.modifyBeat()
     
