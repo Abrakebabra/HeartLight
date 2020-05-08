@@ -23,7 +23,7 @@ var lightMods: [LightModPair] = []
 
 for (_, light) in controller.lights {
     
-    let beatMod = BeatModifier(bpmLowThreshold: 60, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
+    let beatMod = BeatModifier(bpmLowThreshold: 80, bpmHighThreshold: 110, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
@@ -32,13 +32,16 @@ for (_, light) in controller.lights {
 
 bleController.bpmReceived = {
     (bpm) in
-    print("BPM from closure: \(bpm)")
+    print("Beats per minute: \(bpm)")
     
+    // a fix until I can move the zero division check to the setBPM function
     if bpm > 0 {
         beatTimer.setBPM(bpm: bpm)
-        for i in lightMods {
-            i.mod.updateBPM(bpm: bpm)
-        }
+    }
+    
+    // allows the lights to return to normal when the hrm stops providing data
+    for i in lightMods {
+        i.mod.updateBPM(bpm: bpm)
     }
     
 }

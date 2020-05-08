@@ -84,11 +84,11 @@ struct ColorModifier {
 
 class BeatModifier {
     
-    var bpmPrev: Float = 70.0
+    var bpmPrev: Float = 60.0
     // read and write from different threads.
     let bpmSemaphore = DispatchSemaphore(value: 1)
     // current and previous bpm
-    var bpm: [Float] = [70.0, 70.0] {
+    var bpm: [Float] = [60.0, 60.0] {
         willSet {
             bpmSemaphore.wait()
         }
@@ -183,10 +183,20 @@ class BeatModifier {
     func modifyBeat() -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
         
         self.bpmSemaphore.wait()
-        let bpmArray: [Float] = self.bpm
+        var bpmArray: [Float] = self.bpm
         self.bpmSemaphore.signal()
         
-        let beatMilliSec: Float = 60.0 / bpmArray[0] * 1000.0
+        
+        if bpmArray[0] == 0 {
+            bpmArray[0] = self.bpmLowThreshold
+            if bpmArray[1] == 0 {
+                bpmArray[1] = self.bpmLowThreshold
+            }
+        }
+        
+        let bpmSmoothed: Float = (bpmArray[0] + bpmArray[1]) / 2
+        
+        let beatMilliSec: Float = 60.0 / bpmSmoothed * 1000.0
         let stressScores: (Float, Float, Float, Float, Float) = stressScoreRange(bpmArray)
         
         let ss0: Float = stressScores.0
