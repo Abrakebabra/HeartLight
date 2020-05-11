@@ -21,8 +21,17 @@ class Simulator {
     // needs a 1 second timer
     // needs its own queue
     
-    let queue = DispatchQueue(label: "Simulator")
+    let simulationTimerQueue = DispatchQueue(label: "Simulator")
     var hrmRecord: [Int]? = nil
+    
+    var bpmReceived: ((Int) -> Void)?
+    
+    var bpm: Int? {
+        didSet {
+            self.bpmReceived?(self.bpm!)
+        }
+    }
+    
     
     
     func deserialiser(data: Data) -> [Int]? {
@@ -48,6 +57,7 @@ class Simulator {
             return
         }
         
+        // user/Documents/DataLife/HeartRate
         directory.appendPathComponent("DataLife/HeartRate", isDirectory: true)
         let file = directory.appendingPathComponent(jsonFile)
         
@@ -64,6 +74,21 @@ class Simulator {
     
     init(fileNameWithExtension: String) {
         self.readFile(jsonFile: fileNameWithExtension)
+    }
+    
+    
+    func simulate() {
+        guard let hrmRecord = self.hrmRecord else {
+            print("No hrm record loaded")
+            return
+        }
+        
+        self.simulationTimerQueue.async {
+            for entry in hrmRecord {
+                self.bpm = entry
+                sleep(1)
+            }
+        }
     }
     
     

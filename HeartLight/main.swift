@@ -10,12 +10,22 @@ import Foundation
 
 import YeelightController
 
+
+
+enum Source {
+    case hrm
+    case simulation
+}
+
+
 let bleController = BLEController()
-bleController.start()
+let simulator = Simulator(fileNameWithExtension: "HeartRateData 01.json")
 let controller = LightController()
-controller.discover(wait: .lightCount(7))
+controller.discover(wait: .lightCount(6))
+
 let beatTimer = BeatTimer()
 var runProgram = true
+var inputActive = false
 
 
 var lightMods: [LightModPair] = []
@@ -23,28 +33,60 @@ var lightMods: [LightModPair] = []
 
 for (_, light) in controller.lights {
     
-    let beatMod = BeatModifier(bpmLowThreshold: 80, bpmHighThreshold: 110, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
+    let beatMod = BeatModifier(bpmLowThreshold: 65, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
 
 
-
-bleController.bpmReceived = {
-    (bpm) in
-    print("Beats per minute: \(bpm)")
-    
-    // a fix until I can move the zero division check to the setBPM function
-    if bpm > 0 {
-        beatTimer.setBPM(bpm: bpm)
+func beatHandler(source: Source) {
+    switch source {
+    case .hrm:
+        bleController.start()
+        
+        bleController.bpmReceived = {
+            (bpm) in
+            print("Beats per minute: \(bpm)")
+            
+            // a fix until I can move the zero division check to the setBPM function
+            if bpm > 0 {
+                beatTimer.setBPM(bpm: bpm)
+            }
+            
+            // allows the lights to return to normal when the hrm stops providing data
+            for i in lightMods {
+                i.mod.updateBPM(bpm: bpm)
+            }
+            
+        }
+    case .simulation:
+        simulator.simulate()
+        
+        simulator.bpmReceived = {
+            (bpm) in
+            print("Beats per minute: \(bpm)")
+            
+            // a fix until I can move the zero division check to the setBPM function
+            if bpm > 0 {
+                beatTimer.setBPM(bpm: bpm)
+            }
+            
+            // allows the lights to return to normal when the hrm stops providing data
+            for i in lightMods {
+                i.mod.updateBPM(bpm: bpm)
+            }
+            
+        }
     }
-    
-    // allows the lights to return to normal when the hrm stops providing data
-    for i in lightMods {
-        i.mod.updateBPM(bpm: bpm)
-    }
-    
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -119,8 +161,25 @@ while runProgram == true {
     
     switch input {
     case "go":
-        musicOn()
-        beatTimer.timer()
+        if inputActive == false {
+            musicOn()
+            beatTimer.timer()
+            beatHandler(source: .hrm)
+            inputActive = true
+        } else {
+            print("Input already active")
+        }
+        
+    case "sim":
+        if inputActive == false {
+            musicOn()
+            beatTimer.timer()
+            beatHandler(source: .simulation)
+            inputActive = true
+        } else {
+            print("Input already active")
+        }
+        
         
     case "stop":
         musicOff()
