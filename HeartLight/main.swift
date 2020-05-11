@@ -15,13 +15,16 @@ import YeelightController
 enum Source {
     case hrm
     case simulation
+    case testCalibration
 }
 
 
 let bleController = BLEController()
-let simulator = Simulator(fileNameWithExtension: "HeartRateData 01.json")
+let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
 let controller = LightController()
 controller.discover(wait: .lightCount(6))
+
+let autoCalibrator = AutoCalibrate()
 
 let beatTimer = BeatTimer()
 var runProgram = true
@@ -77,12 +80,29 @@ func beatHandler(source: Source) {
             }
             
         }
+        
+        
+    case .testCalibration:
+        simulator.simulate()
+        
+        simulator.bpmReceived = {
+            (bpm) in
+            if bpm > 0 {
+                autoCalibrator.collectNewBeat(newBeat: bpm)
+                autoCalibrator.test()
+            }
+        }
     }
 }
 
 
 
-
+simulator.simulationComplete = {
+    print("Max flashes: \(autoCalibrator.maxFlashCount / autoCalibrator.beatReceived)")
+    print("Med flashes: \(autoCalibrator.medFlashCount / autoCalibrator.beatReceived)")
+    print("Flashes: \(autoCalibrator.flashCount / autoCalibrator.beatReceived)")
+    print("Small flashes: \(autoCalibrator.smallFlashCount / autoCalibrator.beatReceived)")
+}
 
 
 
@@ -178,6 +198,14 @@ while runProgram == true {
             inputActive = true
         } else {
             print("Input already active")
+        }
+        
+        
+    case "test calibrator":
+        if inputActive == false {
+            simulator.overrideDataNotificationTime(time: 0.01)
+            beatHandler(source: .testCalibration)
+            inputActive = true
         }
         
         

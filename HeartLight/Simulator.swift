@@ -32,6 +32,10 @@ class Simulator {
         }
     }
     
+    var sleepLength: Double = 1.0
+    
+    
+    var simulationComplete: (() -> Void)?
     
     
     func deserialiser(data: Data) -> [Int]? {
@@ -86,11 +90,18 @@ class Simulator {
         self.simulationTimerQueue.async {
             for entry in hrmRecord {
                 self.bpm = entry
-                sleep(1)
+                usleep(UInt32(self.sleepLength * 1000000.0))
             }
+            
+            // run code in closure when simulation is complete
+            self.simulationComplete?()
         }
     }
     
+    
+    func overrideDataNotificationTime(time: Double) {
+        self.sleepLength = time
+    }
     
     
 }
