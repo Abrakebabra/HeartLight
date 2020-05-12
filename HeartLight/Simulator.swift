@@ -10,8 +10,8 @@ import Foundation
 
 
 
-
-struct EncodableArray: Codable {
+// structure of the JSON file read and written
+fileprivate struct EncodableArray: Codable {
     let arrayHeartRate: [Int]
 }
 
@@ -21,24 +21,24 @@ class Simulator {
     // needs a 1 second timer
     // needs its own queue
     
-    let simulationTimerQueue = DispatchQueue(label: "Simulator")
-    var hrmRecord: [Int]? = nil
+    private let simulationTimerQueue = DispatchQueue(label: "Simulator")
+    private var hrmRecord: [Int]? = nil
     
     var bpmReceived: ((Int) -> Void)?
     
-    var bpm: Int? {
+    private var bpm: Int? {
         didSet {
             self.bpmReceived?(self.bpm!)
         }
     }
     
-    var sleepLength: Double = 1.0
+    private var sleepLength: Double = 1.0
     
     
     var simulationComplete: (() -> Void)?
     
     
-    func deserialiser(data: Data) -> [Int]? {
+    private func deserialiser(data: Data) -> [Int]? {
         let decoder = JSONDecoder()
         
         var hrmArray: [Int]?
@@ -55,7 +55,7 @@ class Simulator {
     }
     
     
-    func readFile(jsonFile: String) {
+    private func readFile(jsonFile: String) {
         guard var directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
             print("directory not found")
             return

@@ -18,22 +18,32 @@ enum Source {
     case testCalibration
 }
 
-
+// handles connection with BLE device
 let bleController = BLEController()
-let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
+
+// simulates a connection with a BLE device from previously captured data
+let simulator = Simulator(fileNameWithExtension: "HeartRateData 03.json")
+
+// handles the connection with the lights
 let controller = LightController()
 controller.discover(wait: .lightCount(6))
 
-let autoCalibrator = AutoCalibrate()
+// testing the auto-calibration class
+let testCalibrator = TestCalibrator()
 
+// an asynchronous timer that loops in time with the heart rate to send messages to the light independent of the rate the bpm notifications are received
 let beatTimer = BeatTimer()
+
+// checks for command line inputs
 var runProgram = true
+
+// a check that the program cannot be started twice
 var inputActive = false
 
-
+// holds pairs of lights and their modification objects
 var lightMods: [LightModPair] = []
 
-
+// get all the lights, create a modifier and store them as a pair
 for (_, light) in controller.lights {
     
     let beatMod = BeatModifier(bpmLowThreshold: 65, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
@@ -42,6 +52,7 @@ for (_, light) in controller.lights {
 }
 
 
+// Run each time data is received from the heart rate monitor (60x / sec)
 func beatHandler(source: Source) {
     switch source {
     case .hrm:
@@ -80,16 +91,14 @@ func beatHandler(source: Source) {
             }
             
         }
-        
-        
     case .testCalibration:
         simulator.simulate()
         
         simulator.bpmReceived = {
             (bpm) in
             if bpm > 0 {
-                autoCalibrator.collectNewBeat(newBeat: bpm)
-                autoCalibrator.test()
+                testCalibrator.collectNewBeat(newBeat: bpm)
+                testCalibrator.test()
             }
         }
     }
@@ -98,17 +107,16 @@ func beatHandler(source: Source) {
 
 
 simulator.simulationComplete = {
-    print("Max flashes: \(autoCalibrator.maxFlashCount / autoCalibrator.beatReceived)")
-    print("Med flashes: \(autoCalibrator.medFlashCount / autoCalibrator.beatReceived)")
-    print("Flashes: \(autoCalibrator.flashCount / autoCalibrator.beatReceived)")
-    print("Small flashes: \(autoCalibrator.smallFlashCount / autoCalibrator.beatReceived)")
+    print("Max flashes: \(testCalibrator.maxFlashCount / testCalibrator.beatReceived)")
+    print("Med flashes: \(testCalibrator.medFlashCount / testCalibrator.beatReceived)")
+    print("Flashes: \(testCalibrator.flashCount / testCalibrator.beatReceived)")
+    print("Small flashes: \(testCalibrator.smallFlashCount / testCalibrator.beatReceived)")
 }
 
 
 
 
-
-
+// A loop that sends the signal to the lights, to reflect the current heart rate
 
 let beatQueue = DispatchQueue(label: "Beat Queue")
 
@@ -203,7 +211,7 @@ while runProgram == true {
         
     case "test calibrator":
         if inputActive == false {
-            simulator.overrideDataNotificationTime(time: 0.01)
+            simulator.overrideDataNotificationTime(time: 0.0)
             beatHandler(source: .testCalibration)
             inputActive = true
         }
