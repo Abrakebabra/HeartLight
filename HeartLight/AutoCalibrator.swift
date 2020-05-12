@@ -20,8 +20,8 @@ class AutoCalibrate {
     
     fileprivate var lastTenMinutes: [Int] = []
     fileprivate var lastSixBeats: [Int] = []
-    var lowThreshold: Int = 140
-    var highThreshold: Int = 180
+    var lowThreshold: Double = 140.0
+    var highThreshold: Double = 180.0
     
     
     func collectNewBeat(newBeat: Int) {
@@ -60,12 +60,12 @@ class AutoCalibrate {
         
         // find a suitable resting heart rate and remove anomalies
         let lowerQuartileElement = Int(ceil(numOfElements / 4))
-        self.lowThreshold = Int(Double(ordered[lowerQuartileElement]) * 1.1)
+        self.lowThreshold = Double(ordered[lowerQuartileElement]) * 1.1
         
         // based off this person's experiment:
         // http://campus.murraystate.edu/academic/faculty/tderting/samplelab.html
         let upperQuartileElement = Int(ceil(numOfElements / 4 * 3))
-        self.highThreshold = Int(Double(ordered[upperQuartileElement]) * 1.4)
+        self.highThreshold = Double(ordered[upperQuartileElement]) * 1.4
         
     }
 }
@@ -112,19 +112,19 @@ class TestCalibrator: AutoCalibrate {
         self.getThresholds()
         var flash: String = ""
         
-        if self.bpm > self.highThreshold {
+        if Double(self.bpm) > self.highThreshold {
             flash = "MAX FLASH"
             self.beatReceived += 1.0
             self.maxFlashCount += 1.0
-        } else if self.bpm > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 2) {
+        } else if Double(self.bpm) > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 2) {
             flash = "MED FLASH"
             self.beatReceived += 1.0
             self.medFlashCount += 1.0
-        } else if self.bpm > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 4) {
+        } else if Double(self.bpm) > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 10) {
             flash = "FLASH"
             self.beatReceived += 1.0
             self.flashCount += 1.0
-        } else if self.bpm > self.lowThreshold {
+        } else if Double(self.bpm) > self.lowThreshold {
             flash = "flash"
             self.beatReceived += 1.0
             self.smallFlashCount += 1.0
@@ -133,6 +133,6 @@ class TestCalibrator: AutoCalibrate {
         }
         
         
-        print("BPM: \(self.bpm)    Low: \(self.lowThreshold)    High: \(self.highThreshold)    \(flash)")
+        print("BPM: \(Int(self.bpm))    Low: \(Int(self.lowThreshold))    High: \(Int(self.highThreshold))    \(flash)")
     }
 }
