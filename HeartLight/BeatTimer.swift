@@ -8,19 +8,16 @@
 
 import Foundation
 
-
+/// an asynchronous timer that loops at the current heart rate.  This is used to process and send commands for each beat to the light.  The heart rate monitor and BeatTimer both set and read var bpm asynchronously and so a semaphore is required.
 class BeatTimer {
     
-    let timerQueue = DispatchQueue(label: "Timer Queue")
-    let bpmSemaphore = DispatchSemaphore(value: 1)
-    var timerActive: Bool = true
+    private let timerQueue = DispatchQueue(label: "Timer Queue")
+    private let bpmSemaphore = DispatchSemaphore(value: 1)
+    private var timerActive: Bool = true
+    private var bpm: Int = 30
     
-    
-    // accessed by semaphore by either bluetooth or timer?
-    var bpm: Int = 30
-    
-    
-    var microsecondsBetweenBeats: UInt32 {
+    // converts beats per minute to microseconds for usleep timer.
+    private var microsecondsBetweenBeats: UInt32 {
         get {
             self.bpmSemaphore.wait()
             
@@ -32,7 +29,11 @@ class BeatTimer {
         }
     }
     
+    /// Code within the closure is run each time the timer completes a "beat"
+    var beat: (() -> Void)?
     
+    
+    /// Update the rate the timer should loop at.
     func setBPM(bpm: Int) {
         self.bpmSemaphore.wait()
         self.bpm = bpm
@@ -40,15 +41,14 @@ class BeatTimer {
     }
     
     
+    /// Stop the beat timer.
     func end() {
         self.timerActive = false
     }
     
     
-    var beat: (() -> Void)?
-    
-    
-    func timer() {
+    /// Start the beat timer.
+    func start() {
         self.timerQueue.async {
             while self.timerActive == true {
                 self.beat?()

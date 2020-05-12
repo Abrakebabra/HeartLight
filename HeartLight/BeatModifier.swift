@@ -11,7 +11,6 @@ import Foundation
 
 
 
-
 struct BrightnessModifier {
     // brightness parameter cannot be 0 if reduced by range between max and min, so must be 51, not 50.
     static let max: Float = 100.0

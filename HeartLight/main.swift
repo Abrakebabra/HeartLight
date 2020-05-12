@@ -191,7 +191,7 @@ while runProgram == true {
     case "go":
         if inputActive == false {
             musicOn()
-            beatTimer.timer()
+            beatTimer.start()
             beatHandler(source: .hrm)
             inputActive = true
         } else {
@@ -201,7 +201,7 @@ while runProgram == true {
     case "sim":
         if inputActive == false {
             musicOn()
-            beatTimer.timer()
+            beatTimer.start()
             beatHandler(source: .simulation)
             inputActive = true
         } else {
@@ -221,6 +221,7 @@ while runProgram == true {
         musicOff()
         
     case "exit":
+        beatTimer.end()
         for (key, _) in controller.lights {
             controller.lights[key]?.tcp.conn.cancel()
         }
