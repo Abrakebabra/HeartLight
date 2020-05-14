@@ -83,78 +83,22 @@ struct ColorModifier {
 
 class BeatModifier {
     
-    var bpmPrev: Float = 60.0
-    // read and write from different threads.
-    let bpmSemaphore = DispatchSemaphore(value: 1)
-    // current and previous bpm
-    var bpm: [Float] = [60.0, 60.0] {
-        willSet {
-            bpmSemaphore.wait()
-        }
-        didSet {
-            self.bpmPrev = self.bpm[0]
-            bpmSemaphore.signal()
-        }
-    }
-    
-    var bpmHighThreshold: Float
-    var bpmLowThreshold: Float
-    // the three major modifiers
     var brightnessModifier: BrightnessModifier
     var colorModifier: ColorModifier
     
     
+    
     // current brightness and color
-    init(bpmLowThreshold: Int, bpmHighThreshold: Int, brightnessOriginal: Int, rgb: Int) {
-        self.bpmLowThreshold = Float(bpmLowThreshold)
-        self.bpmHighThreshold = Float(bpmHighThreshold)
-        
+    init(brightnessOriginal: Int, rgb: Int) {
         self.brightnessModifier = BrightnessModifier(brightnessOriginal)
         self.colorModifier = ColorModifier(rgb)
     } // init
-    
-    
-    func stressScore(bpm: Float) -> Float {
-        let score: Float = (bpm - self.bpmLowThreshold) /
-            (self.bpmHighThreshold - self.bpmLowThreshold)
-        
-        if score > 1.0 {
-            return 1.0
-        } else if score < 0.0 {
-            return 0.0
-        } else {
-            return score
-        }
-    }
-    
-    
-    func stressScoreRange(_ bpmArray: [Float]) -> (Float, Float, Float, Float, Float) {
-        let currentBPM: Float = bpmArray[0]
-        let prevBPM: Float = bpmArray[1]
-        let bpmDifference: Float = currentBPM - prevBPM
-        
-        return (self.stressScore(bpm: prevBPM + bpmDifference * 0.2),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.4),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.6),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.8),
-                self.stressScore(bpm: prevBPM + bpmDifference))
-    }
-    
-    func updateBPM(bpm: Int) {
-        self.bpm = [Float(bpm), self.bpmPrev]
-    } // BeatModifier.updateBPM()
     
     
     func updateLightsOriginal(brightness: Int, rgb: Int) {
         self.brightnessModifier.updateOriginalValues(brightness)
         self.colorModifier.updateOriginalValues(rgb)
     } // BeatModifier.updateLightsOriginal()
-    
-    
-    func editThresholds(bpmLowThreshold: Int, bpmHighThreshold: Int) {
-        self.bpmLowThreshold = Float(bpmLowThreshold)
-        self.bpmHighThreshold = Float(bpmHighThreshold)
-    } // BeatModiier.editThresholds()
     
     
     func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int, Int, Int) {
@@ -165,7 +109,6 @@ class BeatModifier {
                 Int(0.30 * totalBeatMS),
                 Int(0.22 * totalBeatMS)) // do I want a slight rise?  or 0.2
     }
-    
     
     
     func pointMods(_ stressScore: Float, _ beatMilliSec: Float, beatProportion: Float, pulseProportion: Float) -> (Int, Int, Int) {
