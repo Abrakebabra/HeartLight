@@ -121,25 +121,39 @@ class BeatModifier {
     }
     
     
+    
+    
+    
+    
+    
+    func stressScore(bpm: Double, _ lowThreshold: Double, _ highThreshold: Double) -> Double {
+        return (bpm - lowThreshold) /
+            (highThreshold - lowThreshold)
+    }
+    
+    
+    
+    func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> (Double, Double, Double, Double, Double) {
+        
+        let stressScore = self.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
+        let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
+        
+        return (stressScore + bpmDiffStressScore * 0.2,
+                stressScore + bpmDiffStressScore * 0.4,
+                stressScore + bpmDiffStressScore * 0.6,
+                stressScore + bpmDiffStressScore * 0.8,
+                stressScore + bpmDiffStressScore)
+    }
+    
+    
+    
+    
     /// (rgb, brightness, duration)
-    func modifyBeat() -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
-        
-        self.bpmSemaphore.wait()
-        var bpmArray: [Double] = self.bpm
-        self.bpmSemaphore.signal()
+    func modifyBeat(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
         
         
-        if bpmArray[0] == 0 {
-            bpmArray[0] = self.bpmLowThreshold
-            if bpmArray[1] == 0 {
-                bpmArray[1] = self.bpmLowThreshold
-            }
-        }
-        
-        let bpmSmoothed: Double = (bpmArray[0] + bpmArray[1]) / 2
-        
-        let beatMilliSec: Double = 60.0 / bpmSmoothed * 1000.0
-        let stressScores: (Double, Double, Double, Double, Double) = stressScoreRange(bpmArray)
+        let beatMilliSec: Double = 60.0 / currentBPM * 1000.0
+        let stressScores: (Double, Double, Double, Double, Double) = stressScoreRange(currentBPM, prevBPM, lowThreshold, highThreshold)
         
         let ss0: Double = stressScores.0
         let ss1: Double = stressScores.1

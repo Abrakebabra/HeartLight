@@ -104,26 +104,17 @@ class BeatVehicle {
 }
 
 
-// perhaps I no longer need this
-enum Zone {
-    case zone0  // below (< threshold range) - no action
-    case zone1  // minimal (bpm < 10 % of range) - require min num of flashes
-    case zone2  // flash (10 <= bpm < 100% of range) - Standard
-    case zone3  // beyond max (bpm > 100 % of range), start turning off some lights?
-}
-
 
 class BeatFilter {
     // read and write from different threads.
     private let bpmSemaphore = DispatchSemaphore(value: 1)
     private var bpm: Double = 60.0
+    
     let bpmSmoothed = BeatVehicle()
     
-    var flashing: Bool = false
-    var minimumBeatsRemaining: Int = 5  // provides at least X heart beats worth of flashes
-    
-    
-    enum ErrorMinFlashCount: Error {
+    private var flashing: Bool = false
+    private var minimumBeatsRemaining: Int = 5  // provides at least X heart beats worth of flashes
+    private enum ErrorMinFlashCount: Error {
         case UnintendedOutcome(String)
     }
     
@@ -149,7 +140,6 @@ class BeatFilter {
     private func setRandomMinBeatsRemaining() {
         self.minimumBeatsRemaining = Int.random(in: 5...8)
     }
-    
     
     
     private func ensureMinFlashCount(_ bpmSmoothed: Double, _ lowThreshold: Double) throws -> Double {
@@ -214,10 +204,11 @@ class BeatFilter {
                 } // minBeatsRemaining
             } // flashing
         } // bpmSmoothed > lowThreshold
-    }
+        
+    } // BeatFilter.ensureMinFlashCount()
     
     
-    func filterBPM(_ lowThreshold: Double) -> Double {
+    func bpmFilter(_ lowThreshold: Double) -> Double {
         self.bpmSmoothed.update(bpm: self.getRawBPM())
         var bpmSmoothed = self.bpmSmoothed.bpmPosition
         
@@ -229,116 +220,11 @@ class BeatFilter {
             print(error)
         }
         
-    }
-    
-    
-    
-    
-    
-    var stressScore: Double = 0.0
-    
-    
-    var bpmHighThreshold: Double = 180.0
-    var bpmLowThreshold: Double = 140.0
-    
-    
-    
-    
-    func stressScore(bpm: Double) -> Double {
-        return (bpm - self.bpmLowThreshold) /
-            (self.bpmHighThreshold - self.bpmLowThreshold)
-    }
-    
-    
-    
-    func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double) -> (Double, Double, Double, Double, Double) {
+        return bpmSmoothed
         
-        var stressScore = self.stressScore(currentBPM)
-        
-        
-        
-        if score > 1.0 {
-            return 1.0
-        } else if score < 0.0 {
-            return 0.0
-        } else {
-            return score
-        }
-        
-        
-        let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM)
-        
-        return (self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.2),
-                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.4),
-                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.6),
-                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.8),
-                self.stressScore(bpm: prevBPM + bpmDiffStressScore))
-    }
+    } // BeatFilter.bpmFilter()
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    private func updateZone(_ bpm: Double, _ lowThreshold: Double, _ highThreshold: Double, _ range: Double) -> Zone {
-        
-        let range = highThreshold - lowThreshold
-        
-        if bpm < lowThreshold {
-            return .zone0
-        } else if bpm < lowThreshold + range * 0.1 {
-            return .zone1
-        } else if bpm <= lowThreshold + range {
-            return .zone2
-        } else {
-            return .zone3
-        }
-    }
-    
-    func processBeatAndThresholds(bpm: Int, lowThreshold: Double, highThreshold: Double) {
-        
-        let range: Double = highThreshold - lowThreshold
-
-        self.zone = self.updateZone(Double(bpm), lowThreshold, highThreshold, range)
-        
-        
-        // figure out
-        
-        switch self.zone {
-        case .zone0:
-            return
-        case .zone1:
-            // ensure that at least 6 beats have been counted, then reset that counter
-            // if falls off, use the lowest possible value
-            // for cases of z1 - z1 - z0 - z1 - z1, the z0 should not reset.
-        case .zone2:
-            // gradual rise and fall
-            // rise and fall within 6 beats? - moving target, how should I handle this?
-            // If falls to zone 1 with no smoothing, have the smoothing continue?
-            // does it need a separate counter for the smoothing to ensure it's complete in case it suddenly drops off?
-        case .zone3:
-            // sudden rise and gradual fall
-            // rise within 1 beat, fall within 6 beats? - moving target, how should I handle this?
-        case .zone4:
-            // start turning off some lights?
-            // figure out how to do this later
-        }
-        
-
-    }
-    
-    
-    
-    
-    
-}
+} // class BeatFilter
 
 
 
