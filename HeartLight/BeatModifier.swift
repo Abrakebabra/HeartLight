@@ -13,23 +13,23 @@ import Foundation
 
 struct BrightnessModifier {
     // brightness parameter cannot be 0 if reduced by range between max and min, so must be 51, not 50.
-    static let max: Float = 100.0
-    static let min: Float = 1.0
-    static let maxPulse: Float = max - min
-    var original: Float
-    var baseRange: Float
+    static let max: Double = 100.0
+    static let min: Double = 1.0
+    static let maxPulse: Double = max - min
+    var original: Double
+    var baseRange: Double
     
     
     init(_ original: Int) {
-        self.original = Float(original)
+        self.original = Double(original)
         self.baseRange = self.original - BrightnessModifier.min
     } // init
     
     
     /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
-    func brightness(_ stressScore: Float, _ pulseProportion: Float) -> Int {
+    func brightness(_ stressScore: Double, _ pulseProportion: Double) -> Int {
         
-        let maxPulse = stressScore * Float(BrightnessModifier.maxPulse)
+        let maxPulse = stressScore * Double(BrightnessModifier.maxPulse)
         let baseline = self.original - stressScore * self.baseRange
         
         return Int(baseline + maxPulse * pulseProportion)
@@ -38,7 +38,7 @@ struct BrightnessModifier {
     
     /// Update the brightness of the light before any modification
     mutating func updateOriginalValues(_ brightness: Int) {
-        self.original = Float(brightness)
+        self.original = Double(brightness)
         self.baseRange = self.original - BrightnessModifier.min
     }
     
@@ -48,20 +48,20 @@ struct BrightnessModifier {
 
 
 struct ColorModifier {
-    var redOriginal: Float
-    var greenOriginal: Float
-    var blueOriginal: Float
+    var redOriginal: Double
+    var greenOriginal: Double
+    var blueOriginal: Double
     
     
     
     init(_ rgb: Int) {
-        self.redOriginal = Float(rgb >> 16)
-        self.greenOriginal = Float((rgb & 0b000000001111111100000000) >> 8)
-        self.blueOriginal = Float(rgb & 0b000000000000000011111111)
+        self.redOriginal = Double(rgb >> 16)
+        self.greenOriginal = Double((rgb & 0b000000001111111100000000) >> 8)
+        self.blueOriginal = Double(rgb & 0b000000000000000011111111)
     }
     
     
-    func color(_ stressScore: Float) -> Int {
+    func color(_ stressScore: Double) -> Int {
         
         let r = Int(self.redOriginal + (stressScore * (255.0 - self.redOriginal)))
         let g = Int(self.greenOriginal - (stressScore * self.greenOriginal))
@@ -72,9 +72,9 @@ struct ColorModifier {
     
     
     mutating func updateOriginalValues(_ rgb: Int) {
-        self.redOriginal = Float(rgb >> 16)
-        self.greenOriginal = Float((rgb & 0b000000001111111100000000) >> 8)
-        self.blueOriginal = Float(rgb & 0b000000000000000011111111)
+        self.redOriginal = Double(rgb >> 16)
+        self.greenOriginal = Double((rgb & 0b000000001111111100000000) >> 8)
+        self.blueOriginal = Double(rgb & 0b000000000000000011111111)
     }
 }
 
@@ -101,7 +101,7 @@ class BeatModifier {
     } // BeatModifier.updateLightsOriginal()
     
     
-    func milliSecPoints(_ totalBeatMS: Float) -> (Int, Int, Int, Int, Int) {
+    func milliSecPoints(_ totalBeatMS: Double) -> (Int, Int, Int, Int, Int) {
         
         return (Int(0.15 * totalBeatMS), // lub
                 Int(0.18 * totalBeatMS),  // or 0.2
@@ -111,7 +111,7 @@ class BeatModifier {
     }
     
     
-    func pointMods(_ stressScore: Float, _ beatMilliSec: Float, beatProportion: Float, pulseProportion: Float) -> (Int, Int, Int) {
+    func pointMods(_ stressScore: Double, _ beatMilliSec: Double, beatProportion: Double, pulseProportion: Double) -> (Int, Int, Int) {
         
         return (
             self.colorModifier.color(stressScore),
@@ -125,7 +125,7 @@ class BeatModifier {
     func modifyBeat() -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
         
         self.bpmSemaphore.wait()
-        var bpmArray: [Float] = self.bpm
+        var bpmArray: [Double] = self.bpm
         self.bpmSemaphore.signal()
         
         
@@ -136,16 +136,16 @@ class BeatModifier {
             }
         }
         
-        let bpmSmoothed: Float = (bpmArray[0] + bpmArray[1]) / 2
+        let bpmSmoothed: Double = (bpmArray[0] + bpmArray[1]) / 2
         
-        let beatMilliSec: Float = 60.0 / bpmSmoothed * 1000.0
-        let stressScores: (Float, Float, Float, Float, Float) = stressScoreRange(bpmArray)
+        let beatMilliSec: Double = 60.0 / bpmSmoothed * 1000.0
+        let stressScores: (Double, Double, Double, Double, Double) = stressScoreRange(bpmArray)
         
-        let ss0: Float = stressScores.0
-        let ss1: Float = stressScores.1
-        let ss2: Float = stressScores.2
-        let ss3: Float = stressScores.3
-        let ss4: Float = stressScores.4
+        let ss0: Double = stressScores.0
+        let ss1: Double = stressScores.1
+        let ss2: Double = stressScores.2
+        let ss3: Double = stressScores.3
+        let ss4: Double = stressScores.4
         
         return (
         self.pointMods(ss0, beatMilliSec, beatProportion: 0.15, pulseProportion: 0.3),

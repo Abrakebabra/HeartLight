@@ -20,66 +20,54 @@ import Foundation
  
  */
 
-enum Zone {
-    case zone0  // below (< threshold range) - no action
-    case zone1  // minimal (bpm < 10 % of range) - require min num of flashes
-    case zone2  // flash (10 <= bpm < 49% of range) - gradual rise and fall
-    case zone3  // flash (50 <= bpm <= 100% of range) - sudden rise, gradual fall
-    case zone4  // beyond max (bpm > 100 % of range), start turning off some lights
-}
+
 
 
 /// smooths transitions between heart bpm jumping around
 class BeatVehicle {
-    var bpmPosition: Int
-    private var target: Int
-    private var acceleration: Int = 0
-    private var velocity: Int = 0
-    private var maxVelocity: Int = 12
+    var bpmPosition: Double = 60.0
+    private var target: Double = 60.0
+    private var acceleration: Double = 0.0
+    private var velocity: Double = 0.0
+    private var maxVelocity: Double = 12.0
     
     
     
-    init(_ currentBPM: Int) {
-        self.bpmPosition = currentBPM
-        self.target = currentBPM
-    }
-    
-    
-    private func distanceToTarget() -> Float {
+    private func distanceToTarget() -> Double {
         // positive rising, negative falling
-        return Float(self.target - self.bpmPosition)
+        return (self.target - self.bpmPosition)
     }
     
     
     private func directionAndMagnitude() {
         // rising
-        if self.distanceToTarget() > 0 {
-            self.acceleration = Int(  ceil(  self.distanceToTarget() / 6.0  )  )
+        if self.distanceToTarget() > 0.0 {
+            self.acceleration = ceil(  self.distanceToTarget() / 6.0  )
             
         // falling
         } else {
-            self.acceleration = Int(  floor(  self.distanceToTarget() / 6.0  )  )
+            self.acceleration = floor(  self.distanceToTarget() / 6.0  )
         }
     }
     
     
     private func setMaxVelocity() {
         // arrival brakes if 12 or under bpm away from target
-        if abs(self.distanceToTarget()) <= 12 {
+        if abs(self.distanceToTarget()) <= 12.0 {
             
             // check direction
-            if self.distanceToTarget() > 0 {
+            if self.distanceToTarget() > 0.0 {
                 // in positive direction
-                self.maxVelocity = Int(ceil(self.distanceToTarget() / 3.0))
+                self.maxVelocity = ceil(  self.distanceToTarget() / 3.0  )
                 
             } else {
                 // in negative direction
-                self.maxVelocity = Int(floor(self.distanceToTarget() / 3.0))
+                self.maxVelocity = floor(  self.distanceToTarget() / 3.0  )
             }
             
             // full speed ahead
         } else {
-            self.maxVelocity = 24
+            self.maxVelocity = 24.0
         }
     }
     
@@ -96,7 +84,7 @@ class BeatVehicle {
     
     private func updatePosition() {
         // if the bpm target is above 20 to current, it will jump rather than accelerate
-        if self.distanceToTarget() > 20 {
+        if self.distanceToTarget() > 20.0 {
             self.bpmPosition = self.target
             
         } else {
@@ -105,7 +93,7 @@ class BeatVehicle {
     }
     
     
-    func update(bpm target: Int) {
+    func update(bpm target: Double) {
         self.target = target
         
         self.directionAndMagnitude()
@@ -116,37 +104,158 @@ class BeatVehicle {
 }
 
 
+// perhaps I no longer need this
+enum Zone {
+    case zone0  // below (< threshold range) - no action
+    case zone1  // minimal (bpm < 10 % of range) - require min num of flashes
+    case zone2  // flash (10 <= bpm < 100% of range) - Standard
+    case zone3  // beyond max (bpm > 100 % of range), start turning off some lights?
+}
 
 
 class BeatFilter {
-    var zone: Zone = .zone0
-    var beatsInMinimalZone: Int = 6  // provides at least 5 heart beats worth of flashes
-    var stressScore: Float = 0.0
-    
-    
-    var bpmPrev: Float = 60.0
     // read and write from different threads.
-    let bpmSemaphore = DispatchSemaphore(value: 1)
-    // current and previous bpm
-    var bpm: [Float] = [60.0, 60.0] {
-        willSet {
-            bpmSemaphore.wait()
-        }
-        didSet {
-            self.bpmPrev = self.bpm[0]
-            bpmSemaphore.signal()
-        }
+    private let bpmSemaphore = DispatchSemaphore(value: 1)
+    private var bpm: Double = 60.0
+    let bpmSmoothed = BeatVehicle()
+    
+    var flashing: Bool = false
+    var minimumBeatsRemaining: Int = 5  // provides at least X heart beats worth of flashes
+    
+    
+    enum ErrorMinFlashCount: Error {
+        case UnintendedOutcome(String)
     }
     
-    var bpmHighThreshold: Float
-    var bpmLowThreshold: Float
+    
+    /// from source on a thread, independent to the rest of the program
+    func setRawBPM(bpm: Int) {
+        self.bpmSemaphore.wait()
+        self.bpm = Double(bpm)
+        self.bpmSemaphore.signal()
+    }
+    
+    
+    /// to be accessed by the program, on thread independent to the source
+    func getRawBPM() -> Double {
+        bpmSemaphore.wait()
+        let bpm = self.bpm
+        bpmSemaphore.signal()
+        
+        return bpm
+    }
+    
+    
+    private func setRandomMinBeatsRemaining() {
+        self.minimumBeatsRemaining = Int.random(in: 5...8)
+    }
+    
+    
+    
+    private func ensureMinFlashCount(_ bpmSmoothed: Double, _ lowThreshold: Double) throws -> Double {
+        
+        
+        // default:  bpmSmoothed < lowThreshold, flashing false, minBeats > 0
+        if bpmSmoothed > lowThreshold {
+            if self.flashing {
+                // bpmSmoothed > lowThreshold, flashing true, minBeats no impact
+                // outcome 3
+                // next possible outcomes:  3, 4, 5
+                self.minimumBeatsRemaining -= 1
+                return bpmSmoothed
+                
+            } else {
+                if self.minimumBeatsRemaining > 0 {
+                    // bpmSmoothed > lowThreshold, flashing false, minBeats > 0
+                    // outcome 2
+                    // next possible outcomes:  3, 4, 5 (if minBeats starts at 1)
+                    self.flashing = true
+                    self.minimumBeatsRemaining -= 1
+                    return bpmSmoothed
+                    
+                } else {
+                    // bpmSmoothed > lowThreshold, flashing false, minBeats <= 0
+                    // Should be impossible
+                    // flashing should be set to false by outcome 5
+                    throw ErrorMinFlashCount.UnintendedOutcome("BeatFilter ensureMinFlashCount error:  bpmSmoothed > lowThreshold, minBeats <= 0, flashing false.  bpmSmoothed: \(bpmSmoothed), lowThreshold: \(lowThreshold)")
+                } // minBeatsRemaining
+            } // flashing
+        } else {
+            if self.flashing {
+                if self.minimumBeatsRemaining > 0 {
+                    // bpmSmoothed <= lowThreshold, flashing true, minBeats > 0
+                    // outcome 4
+                    // next possible outcomes:  3, 4, 5
+                    self.minimumBeatsRemaining -= 1
+                    return (lowThreshold + 1.0)
+                    
+                } else {
+                    // bpmSmoothed <= lowThreshold, flashing true, minBeats <= 0
+                    // outcome 5
+                    // next possible outcomes:  1, 2
+                    self.minimumBeatsRemaining -= 1
+                    self.flashing = false
+                    self.setRandomMinBeatsRemaining()
+                    return (lowThreshold + 1.0)
+                    
+                }
+            } else {
+                if self.minimumBeatsRemaining > 0 {
+                    // bpmSmoothed <= lowThreshold, flashing false, minBeats > 0
+                    // outcome 1
+                    // next possible outcome:  2
+                    return bpmSmoothed
+                    
+                } else {
+                    // bpmSmoothed <= lowThreshold, flashing false, minBeats <= 0
+                    // should be impossible
+                    // minBeats should be reset by outcome 5
+                    throw ErrorMinFlashCount.UnintendedOutcome("BeatFilter ensureMinFlashCount error:  bpmSmoothed <= lowThreshold, minBeats <= 0, flashing false.  bpmSmoothed: \(bpmSmoothed), lowThreshold: \(lowThreshold)")
+                } // minBeatsRemaining
+            } // flashing
+        } // bpmSmoothed > lowThreshold
+    }
+    
+    
+    func filterBPM(_ lowThreshold: Double) -> Double {
+        self.bpmSmoothed.update(bpm: self.getRawBPM())
+        var bpmSmoothed = self.bpmSmoothed.bpmPosition
+        
+        
+        do {
+            bpmSmoothed = try ensureMinFlashCount(bpmSmoothed, lowThreshold)
+        }
+        catch let error {
+            print(error)
+        }
+        
+    }
     
     
     
     
-    func stressScore(bpm: Float) -> Float {
-        let score: Float = (bpm - self.bpmLowThreshold) /
+    
+    var stressScore: Double = 0.0
+    
+    
+    var bpmHighThreshold: Double = 180.0
+    var bpmLowThreshold: Double = 140.0
+    
+    
+    
+    
+    func stressScore(bpm: Double) -> Double {
+        return (bpm - self.bpmLowThreshold) /
             (self.bpmHighThreshold - self.bpmLowThreshold)
+    }
+    
+    
+    
+    func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double) -> (Double, Double, Double, Double, Double) {
+        
+        var stressScore = self.stressScore(currentBPM)
+        
+        
         
         if score > 1.0 {
             return 1.0
@@ -155,24 +264,17 @@ class BeatFilter {
         } else {
             return score
         }
-    }
-    
-    
-    func stressScoreRange(_ bpmArray: [Float]) -> (Float, Float, Float, Float, Float) {
-        let currentBPM: Float = bpmArray[0]
-        let prevBPM: Float = bpmArray[1]
-        let bpmDifference: Float = currentBPM - prevBPM
         
-        return (self.stressScore(bpm: prevBPM + bpmDifference * 0.2),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.4),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.6),
-                self.stressScore(bpm: prevBPM + bpmDifference * 0.8),
-                self.stressScore(bpm: prevBPM + bpmDifference))
+        
+        let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM)
+        
+        return (self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.2),
+                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.4),
+                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.6),
+                self.stressScore(bpm: prevBPM + bpmDiffStressScore * 0.8),
+                self.stressScore(bpm: prevBPM + bpmDiffStressScore))
     }
     
-    func updateBPM(bpm: Int) {
-        self.bpm = [Float(bpm), self.bpmPrev]
-    } // BeatModifier.updateBPM()
     
     
     
@@ -183,7 +285,9 @@ class BeatFilter {
     
     
     
-    private func updateZone(_ bpm: Float, _ lowThreshold: Float, _ highThreshold: Float, _ range: Float) -> Zone {
+    
+    
+    private func updateZone(_ bpm: Double, _ lowThreshold: Double, _ highThreshold: Double, _ range: Double) -> Zone {
         
         let range = highThreshold - lowThreshold
         
@@ -191,20 +295,18 @@ class BeatFilter {
             return .zone0
         } else if bpm < lowThreshold + range * 0.1 {
             return .zone1
-        } else if bpm < lowThreshold + range * 0.49 {
+        } else if bpm <= lowThreshold + range {
             return .zone2
-        } else if bpm <= highThreshold {
-            return .zone3
         } else {
-            return .zone4
+            return .zone3
         }
     }
     
-    func processBeatAndThresholds(bpm: Int, lowThreshold: Float, highThreshold: Float) {
+    func processBeatAndThresholds(bpm: Int, lowThreshold: Double, highThreshold: Double) {
         
-        let range: Float = highThreshold - lowThreshold
+        let range: Double = highThreshold - lowThreshold
 
-        self.zone = self.updateZone(Float(bpm), lowThreshold, highThreshold, range)
+        self.zone = self.updateZone(Double(bpm), lowThreshold, highThreshold, range)
         
         
         // figure out

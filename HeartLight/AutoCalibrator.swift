@@ -75,11 +75,11 @@ class AutoCalibrate {
 /// An extension to test the calibration function without cluttering the original class.
 class TestCalibrator: AutoCalibrate {
     var bpm: Int = 60
-    var maxFlashCount: Float = 0.0
-    var medFlashCount: Float = 0.0
-    var flashCount: Float = 0.0
-    var smallFlashCount: Float = 0.0
-    var beatReceived: Float = 0.0
+    var maxFlashCount: Double = 0.0
+    var medFlashCount: Double = 0.0
+    var flashCount: Double = 0.0
+    var smallFlashCount: Double = 0.0
+    var beatReceived: Double = 0.0
     
     
     override func collectNewBeat(newBeat: Int) {
