@@ -20,12 +20,10 @@ class BeatTimer {
     private var microsecondsBetweenBeats: UInt32 {
         get {
             self.bpmSemaphore.wait()
+            let microSeconds = UInt32((60 * 1000000) / self.bpm)
+            self.bpmSemaphore.signal()
             
-            defer {
-                self.bpmSemaphore.signal()
-            }
-            
-            return UInt32((60 * 1000000) / self.bpm)
+            return microSeconds
         }
     }
     

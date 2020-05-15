@@ -9,7 +9,7 @@
 import Foundation
 
 /// Find the user's calm heart rate and estimate a stressed heart rate.  Adjusts over time.  BPM often crosses the low threshold for very short amounts of time.  This can be dealt with in the BeatFilter class as it is outside the scope of this class.
-class AutoCalibrate {
+class AutoCalibrator {
     /*
      Instead of an array of 600 elements, an average of the last six beats is taken and appended to a smaller array of the last ten minutes.  I assume that when an element is removed from an array, it is copied and a new array is created.
      
@@ -18,6 +18,7 @@ class AutoCalibrate {
      high threshold is 140 % of upper quartile (11 May, 2020)
     */
     
+    fileprivate let semaphore = DispatchSemaphore(value: 1)
     fileprivate var lastTenMinutes: [Int] = []
     fileprivate var lastSixBeats: [Int] = []
     var lowThreshold: Double = 140.0
@@ -25,6 +26,11 @@ class AutoCalibrate {
     
     
     func collectNewBeat(newBeat: Int) {
+        self.semaphore.wait()
+        defer {
+            self.semaphore.signal()
+        }
+        
         self.lastSixBeats.append(newBeat)
         
         if self.lastSixBeats.count >= 6 {
@@ -49,7 +55,12 @@ class AutoCalibrate {
     }
     
     
-    func getThresholds() {
+    func getThresholds()  {
+        self.semaphore.wait()
+        defer {
+            self.semaphore.signal()
+        }
+        
         // collect at least 2 minutes worth of data (completely arbitrary choice - 11 May, 2020)
         if self.lastTenMinutes.count < 20 {
             return
@@ -67,13 +78,14 @@ class AutoCalibrate {
         let upperQuartileElement = Int(ceil(numOfElements / 4 * 3))
         self.highThreshold = Double(ordered[upperQuartileElement]) * 1.4
         
+        
     }
 }
 
 
 
 /// An extension to test the calibration function without cluttering the original class.
-class TestCalibrator: AutoCalibrate {
+class TestCalibrator: AutoCalibrator {
     var bpm: Int = 60
     var maxFlashCount: Double = 0.0
     var medFlashCount: Double = 0.0

@@ -42,11 +42,11 @@ class BeatVehicle {
     private func directionAndMagnitude() {
         // rising
         if self.distanceToTarget() > 0.0 {
-            self.acceleration = ceil(  self.distanceToTarget() / 6.0  )
+            self.acceleration = ceil(  self.distanceToTarget() / 4.0  )
             
         // falling
         } else {
-            self.acceleration = floor(  self.distanceToTarget() / 6.0  )
+            self.acceleration = floor(  self.distanceToTarget() / 8.0  )
         }
     }
     
@@ -73,7 +73,7 @@ class BeatVehicle {
     
     
     private func accelerate() {
-        if (self.velocity + self.acceleration) > abs(self.maxVelocity) {
+        if abs(self.velocity + self.acceleration) > abs(self.maxVelocity) {
             self.velocity = self.maxVelocity
             
         } else {
@@ -83,7 +83,7 @@ class BeatVehicle {
     
     
     private func updatePosition() {
-        // if the bpm target is above 20 to current, it will jump rather than accelerate
+        // if the bpm target is above 20 to current (sudden fright), it will jump rather than accelerate
         if self.distanceToTarget() > 20.0 {
             self.bpmPosition = self.target
             
@@ -111,6 +111,8 @@ class BeatFilter {
     private var bpm: Double = 60.0
     
     let bpmSmoothed = BeatVehicle()
+    var currPosition: Double = 60.0
+    var prevPosition: Double = 60.0
     
     private var flashing: Bool = false
     private var minimumBeatsRemaining: Int = 5  // provides at least X heart beats worth of flashes
@@ -208,7 +210,7 @@ class BeatFilter {
     } // BeatFilter.ensureMinFlashCount()
     
     
-    func bpmFilter(_ lowThreshold: Double) -> Double {
+    func bpmFilter(_ lowThreshold: Double) -> (Double, Double) {
         self.bpmSmoothed.update(bpm: self.getRawBPM())
         var bpmSmoothed = self.bpmSmoothed.bpmPosition
         
@@ -220,26 +222,13 @@ class BeatFilter {
             print(error)
         }
         
-        return bpmSmoothed
+        self.prevPosition = self.currPosition
+        self.currPosition = bpmSmoothed
+        
+        return (self.currPosition, self.prevPosition)
         
     } // BeatFilter.bpmFilter()
     
 } // class BeatFilter
 
 
-
-/*
- 
- previous
- 
- step 1 [0]
- 
- step 2 [1]
- 
- current (target in 3) [2]
- 
- 
- for each change, it recalculates until
- 
- 
- */

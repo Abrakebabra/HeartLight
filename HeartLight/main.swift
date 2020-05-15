@@ -18,11 +18,20 @@ enum Source {
     case testCalibration
 }
 
+
+// checks for command line inputs
+var runProgram = true
+
+// a check that the program cannot be started twice
+var inputActive = false
+
+
+
 // handles connection with BLE device
 let bleController = BLEController()
 
 // simulates a connection with a BLE device from previously captured data
-let simulator = Simulator(fileNameWithExtension: "HeartRateData 03.json")
+let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
 
 // handles the connection with the lights
 let controller = LightController()
@@ -31,14 +40,13 @@ controller.discover(wait: .lightCount(6))
 // testing the auto-calibration class
 let testCalibrator = TestCalibrator()
 
+// auto calibrator and beat filter
+let autoCalibrator = AutoCalibrator()
+let beatFilter = BeatFilter()
+
 // an asynchronous timer that loops in time with the heart rate to send messages to the light independent of the rate the bpm notifications are received
 let beatTimer = BeatTimer()
 
-// checks for command line inputs
-var runProgram = true
-
-// a check that the program cannot be started twice
-var inputActive = false
 
 // holds pairs of lights and their modification objects
 var lightMods: [LightModPair] = []
@@ -46,7 +54,7 @@ var lightMods: [LightModPair] = []
 // get all the lights, create a modifier and store them as a pair
 for (_, light) in controller.lights {
     
-    let beatMod = BeatModifier(bpmLowThreshold: 65, bpmHighThreshold: 80, brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
+    let beatMod = BeatModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
@@ -65,11 +73,8 @@ func beatHandler(source: Source) {
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
                 beatTimer.setBPM(bpm: bpm)
-            }
-            
-            // allows the lights to return to normal when the hrm stops providing data
-            for i in lightMods {
-                i.mod.updateBPM(bpm: bpm)
+                autoCalibrator.collectNewBeat(newBeat: bpm)
+                beatFilter.setRawBPM(bpm: bpm)
             }
             
         }
@@ -78,17 +83,14 @@ func beatHandler(source: Source) {
         
         simulator.bpmReceived = {
             (bpm) in
-            print("Beats per minute: \(bpm)")
             
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
                 beatTimer.setBPM(bpm: bpm)
+                autoCalibrator.collectNewBeat(newBeat: bpm)
+                beatFilter.setRawBPM(bpm: bpm)
             }
             
-            // allows the lights to return to normal when the hrm stops providing data
-            for i in lightMods {
-                i.mod.updateBPM(bpm: bpm)
-            }
             
         }
     case .testCalibration:
@@ -97,8 +99,23 @@ func beatHandler(source: Source) {
         simulator.bpmReceived = {
             (bpm) in
             if bpm > 0 {
-                testCalibrator.collectNewBeat(newBeat: bpm)
-                testCalibrator.test()
+                //testCalibrator.collectNewBeat(newBeat: bpm)
+                //testCalibrator.test()
+                beatTimer.setBPM(bpm: bpm)
+                autoCalibrator.collectNewBeat(newBeat: bpm)
+                beatFilter.setRawBPM(bpm: bpm)
+                
+                autoCalibrator.getThresholds()
+                let lowThreshold = autoCalibrator.lowThreshold
+                let highThreshold = autoCalibrator.highThreshold
+                let smoothedBPMArray = beatFilter.bpmFilter(lowThreshold) // (currBPM, prevBPM)
+                var flash = ""
+                if smoothedBPMArray.0 > lowThreshold {
+                    flash = "flash"
+                }
+                print("rawBPM: \(Int(beatFilter.getRawBPM())), smoothedBPM: \(Int(smoothedBPMArray.0)), lowT: \(Int(lowThreshold)), highT: \(Int(highThreshold))    \(flash)")
+                
+                
             }
         }
     }
@@ -122,8 +139,16 @@ let beatQueue = DispatchQueue(label: "Beat Queue")
 
 beatTimer.beat = {
     beatQueue.async {
+        
+        autoCalibrator.getThresholds()
+        let lowThreshold = autoCalibrator.lowThreshold
+        let highThreshold = autoCalibrator.highThreshold
+        let smoothedBPMArray = beatFilter.bpmFilter(lowThreshold) // (currBPM, prevBPM)
+        print("rawBPM: \(beatFilter.getRawBPM()), smoothedBPM: \(smoothedBPMArray.0), lowT: \(lowThreshold), highT: \(highThreshold)")
+        
+        
         for i in lightMods {
-            let mod = i.mod.modifyBeat()
+            let mod = i.mod.modifyBeat(smoothedBPMArray.0, smoothedBPMArray.1, lowThreshold, highThreshold)
             let p0 = mod.0
             let p1 = mod.1
             let p2 = mod.2
@@ -209,7 +234,7 @@ while runProgram == true {
         }
         
         
-    case "test calibrator":
+    case "test":
         if inputActive == false {
             simulator.overrideDataNotificationTime(time: 0.0)
             beatHandler(source: .testCalibration)
