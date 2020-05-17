@@ -55,7 +55,7 @@ class BeatEmulator {
             while self.timerActive == true {
                 let bpm = self.getBPMSafeAccess()
                 self.beat?(bpm)
-                usleep(UInt32((60 * 1_000_000) / self.bpm))
+                usleep(UInt32((60 * 1_000_000) / bpm))
             } // loop
         } // queue.async
     } // BeatEmulator.timer()
