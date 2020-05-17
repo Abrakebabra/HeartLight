@@ -14,32 +14,36 @@ class BeatEmulator {
     private let timerQueue = DispatchQueue(label: "Timer Queue")
     private let bpmSemaphore = DispatchSemaphore(value: 1)
     private var timerActive: Bool = true
-    private var bpm: Int = 30
+    private var bpm: Double = 30.0
     
-    // converts beats per minute to microseconds for usleep timer.
-    private var microsecondsBetweenBeats: UInt32 {
-        get {
+    /// Code within the closure is run each time the emulator completes a "beat".  bpm is passed into the closure to be safely used without semaphores.
+    var beat: ((Double) -> Void)?
+    
+    
+    /// Update the rate the emulator should loop at.  Will handle bpm of 0.
+    func setBPM(_ bpm: Int) {
+        if bpm > 0 {
             self.bpmSemaphore.wait()
-            let microSeconds = UInt32((60 * 1000000) / self.bpm)
+            self.bpm = Double(bpm)
             self.bpmSemaphore.signal()
             
-            return microSeconds
+        } else {
+            print("BeatEmulator:  bpm received is 0")
         }
+        
     }
     
-    /// Code within the closure is run each time the emulator completes a "beat"
-    var beat: (() -> Void)?
     
-    
-    /// Update the rate the emulator should loop at.
-    func setBPM(bpm: Int) {
+    /// Thread-safe access to the bpm variable - semaphore included.
+    func getBPMSafeAccess() -> Double {
         self.bpmSemaphore.wait()
-        self.bpm = bpm
+        let bpm = self.bpm
         self.bpmSemaphore.signal()
+        return bpm
     }
     
     
-    /// Stop the beat timer.
+    /// Stop the beat emulator.
     func end() {
         self.timerActive = false
     }
@@ -49,8 +53,9 @@ class BeatEmulator {
     func start() {
         self.timerQueue.async {
             while self.timerActive == true {
-                self.beat?()
-                usleep(self.microsecondsBetweenBeats)
+                let bpm = self.getBPMSafeAccess()
+                self.beat?(bpm)
+                usleep(UInt32((60 * 1_000_000) / self.bpm))
             } // loop
         } // queue.async
     } // BeatEmulator.timer()

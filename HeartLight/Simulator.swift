@@ -11,6 +11,7 @@ import Foundation
 
 
 // structure of the JSON file read and written
+// {"arrayHeartRate":[Int]}
 fileprivate struct EncodableArray: Codable {
     let arrayHeartRate: [Int]
 }

@@ -134,6 +134,7 @@ extension BLEController: CBPeripheralDelegate {
         }
     }
     
+    
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService,
                     error: Error?) {
         guard let characteristics = service.characteristics else { return }
@@ -151,14 +152,10 @@ extension BLEController: CBPeripheralDelegate {
         }
     }
     
+    
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
                     error: Error?) {
         switch characteristic.uuid {
-            
-            
-        case manufacturerNameCharacteristicCBUUID:
-            let name = manufacturerName(from: characteristic)
-            print("TEST: \(name)")
             
         case batteryLevelCharacteristicCBUUID:
             let percent = batteryLevel(from: characteristic)
@@ -166,31 +163,11 @@ extension BLEController: CBPeripheralDelegate {
         case heartRateMeasurementCharacteristicCBUUID:
             let bpm = heartRate(from: characteristic)
             onHeartRateReceived(bpm)
-        case bodySensorLocationCharacteristicCBUUID:
-            // let bodySensorLocation = bodyLocation(from: characteristic)
-            // print("Body sensor location: \(bodySensorLocation)")
-            return
         default:
             print("Unhandled Characteristic UUID: \(characteristic.uuid)")
         }
     }
     
-    private func bodyLocation(from characteristic: CBCharacteristic) -> String {
-        guard let characteristicData = characteristic.value,
-            let byte = characteristicData.first else { return "Error" }
-        
-        switch byte {
-        case 0: return "Other"
-        case 1: return "Chest"
-        case 2: return "Wrist"
-        case 3: return "Finger"
-        case 4: return "Hand"
-        case 5: return "Ear Lobe"
-        case 6: return "Foot"
-        default:
-            return "Reserved for future use"
-        }
-    }
     
     private func heartRate(from characteristic: CBCharacteristic) -> Int {
         guard let characteristicData = characteristic.value else { return -1 }
@@ -213,17 +190,6 @@ extension BLEController: CBPeripheralDelegate {
         return Int(byteArray[0])
     }
     
-    private func manufacturerName(from characteristic: CBCharacteristic) -> String {
-        guard let characteristicData = characteristic.value else { return "No name" }
-        let byteArray = [UInt8](characteristicData)
-        var stringName = ""
-        for i in byteArray {
-            stringName.append(String(UnicodeScalar(i)))
-            
-        }
-        return String(stringName)
-        
-    }
     
 }
 

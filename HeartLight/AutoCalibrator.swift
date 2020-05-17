@@ -19,18 +19,13 @@ class AutoCalibrator {
     */
     
     fileprivate let semaphore = DispatchSemaphore(value: 1)
-    fileprivate var lastTenMinutes: [Int] = []
-    fileprivate var lastSixBeats: [Int] = []
+    fileprivate var lastTenMinutes: [Double] = []
+    fileprivate var lastSixBeats: [Double] = []
     var lowThreshold: Double = 140.0
     var highThreshold: Double = 180.0
     
     
-    func collectNewBeat(newBeat: Int) {
-        self.semaphore.wait()
-        defer {
-            self.semaphore.signal()
-        }
-        
+    func collectNewBeat(newBeat: Double) {
         self.lastSixBeats.append(newBeat)
         
         if self.lastSixBeats.count >= 6 {
@@ -40,13 +35,13 @@ class AutoCalibrator {
             }
             
             // append new data
-            var sum: Int = 0
+            var sum: Double = 0.0
             
             for i in self.lastSixBeats {
                 sum += i
             }
             
-            let averageLastSix: Int = sum / self.lastSixBeats.count
+            let averageLastSix: Double = sum / Double(self.lastSixBeats.count)
             self.lastTenMinutes.append(averageLastSix)
             
             // clear array of 6 to start again
@@ -57,27 +52,23 @@ class AutoCalibrator {
     
     /// (lowThreshold, highThreshold)
     func getThresholds() -> (Double, Double) {
-        self.semaphore.wait()
-        defer {
-            self.semaphore.signal()
-        }
         
         // collect at least 2 minutes worth of data (completely arbitrary choice - 11 May, 2020)
         if self.lastTenMinutes.count < 20 {
             return (self.lowThreshold, self.highThreshold)
         }
         
-        let ordered: [Int] = self.lastTenMinutes.sorted()
+        let ordered: [Double] = self.lastTenMinutes.sorted()
         let numOfElements = Double(ordered.count)
         
         // find a suitable resting heart rate and remove anomalies
         let lowerQuartileElement = Int(ceil(numOfElements / 4))
-        self.lowThreshold = Double(ordered[lowerQuartileElement]) * 1.1
+        self.lowThreshold = ordered[lowerQuartileElement] * 1.1
         
         // based off this person's experiment:
         // http://campus.murraystate.edu/academic/faculty/tderting/samplelab.html
         let upperQuartileElement = Int(ceil(numOfElements / 4 * 3))
-        self.highThreshold = Double(ordered[upperQuartileElement]) * 1.4
+        self.highThreshold = ordered[upperQuartileElement] * 1.4
         
         return (self.lowThreshold, self.highThreshold)
         
@@ -88,7 +79,7 @@ class AutoCalibrator {
 
 /// An extension to test the calibration function without cluttering the original class.
 class TestCalibrator: AutoCalibrator {
-    var bpm: Int = 60
+    var bpm: Double = 60.0
     var maxFlashCount: Double = 0.0
     var medFlashCount: Double = 0.0
     var flashCount: Double = 0.0
@@ -96,7 +87,7 @@ class TestCalibrator: AutoCalibrator {
     var beatReceived: Double = 0.0
     
     
-    override func collectNewBeat(newBeat: Int) {
+    override func collectNewBeat(newBeat: Double) {
         self.lastSixBeats.append(newBeat)
         self.bpm = newBeat // testing purposes
         
@@ -107,13 +98,13 @@ class TestCalibrator: AutoCalibrator {
             }
             
             // append new data
-            var sum: Int = 0
+            var sum: Double = 0.0
             
             for i in self.lastSixBeats {
                 sum += i
             }
             
-            let averageLastSix: Int = sum / self.lastSixBeats.count
+            let averageLastSix: Double = sum / Double(self.lastSixBeats.count)
             self.lastTenMinutes.append(averageLastSix)
             
             // clear array of 6 to start again
@@ -126,19 +117,19 @@ class TestCalibrator: AutoCalibrator {
         let _ = self.getThresholds()
         var flash: String = ""
         
-        if Double(self.bpm) > self.highThreshold {
+        if self.bpm > self.highThreshold {
             flash = "MAX FLASH"
             self.beatReceived += 1.0
             self.maxFlashCount += 1.0
-        } else if Double(self.bpm) > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 2) {
+        } else if self.bpm > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 2) {
             flash = "MED FLASH"
             self.beatReceived += 1.0
             self.medFlashCount += 1.0
-        } else if Double(self.bpm) > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 10) {
+        } else if self.bpm > self.lowThreshold + ((self.highThreshold - self.lowThreshold) / 10) {
             flash = "FLASH"
             self.beatReceived += 1.0
             self.flashCount += 1.0
-        } else if Double(self.bpm) > self.lowThreshold {
+        } else if self.bpm > self.lowThreshold {
             flash = "flash"
             self.beatReceived += 1.0
             self.smallFlashCount += 1.0

@@ -98,13 +98,19 @@ class BeatVehicle {
     }
     
     
-    func update(bpm target: Double) {
+    func update(_ target: Double) {
         self.target = target
         
         self.directionAndMagnitude()
         self.setMaxVelocity()
         self.accelerate()
         self.updatePosition()
+    }
+    
+    
+    func getNewSmoothedBPM(_ bpm: Double) -> Double {
+        self.update(bpm)
+        return self.bpmPosition
     }
 }
 
@@ -126,21 +132,8 @@ class BeatFilter {
     }
     
     
-    /// from source on a thread, independent to the rest of the program
-    func setRawBPM(bpm: Int) {
-        self.bpmSemaphore.wait()
-        self.bpm = Double(bpm)
-        self.bpmSemaphore.signal()
-    }
-    
-    
-    /// to be accessed by the program, on thread independent to the source
-    func getRawBPM() -> Double {
-        bpmSemaphore.wait()
-        let bpm = self.bpm
-        bpmSemaphore.signal()
-        
-        return bpm
+    func setBPM(bpm: Double) {
+        self.bpm = bpm
     }
     
     
@@ -216,9 +209,7 @@ class BeatFilter {
     
     /// (current, previous)
     func getFilteredBPM(_ lowThreshold: Double) -> (Double, Double) {
-        self.bpmSmoothed.update(bpm: self.getRawBPM())
-        var bpmSmoothed = self.bpmSmoothed.bpmPosition
-        
+        var bpmSmoothed = self.bpmSmoothed.getNewSmoothedBPM(self.bpm)
         
         do {
             bpmSmoothed = try ensureMinFlashCount(bpmSmoothed, lowThreshold)

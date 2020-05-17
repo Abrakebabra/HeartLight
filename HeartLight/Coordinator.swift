@@ -20,30 +20,18 @@ import YeelightController
 
 
 
-class LightModPair {
-    let light: Light
-    let mod: LightModifier
-    
-    init(light: Light, mod: LightModifier) {
-        self.light = light
-        self.mod = mod
-    }
-}
-
-
-
 class Coordinator {
     
-    let lightModPairs: [LightModPair] = []
+    class LightModPair {
+        let light: Light
+        let mod: LightModifier
+        
+        init(light: Light, mod: LightModifier) {
+            self.light = light
+            self.mod = mod
+        }
+    }
     
-    let bleController = BLEController()     // HRM Monitor Connection
-    let lightController = LightController() // Light Connection
-    let beatTimer = BeatTimer()             // Independent beat emulator
-    let autoCalibrator = AutoCalibrator()   // Calibrators low and high thresholds
-    let beatFilter = BeatFilter()           // Filters the beats used to be smoother
-    
-    // for testing with previously captured heart rate data
-    let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
     
     enum Instructions {
         case run
@@ -52,39 +40,57 @@ class Coordinator {
     }
     
     
+    let lightModPairs: [LightModPair] = []
     
-    func hrmBeat() {
-        bleController.bpmReceived = {
-            (bpm) in
-            // a fix until I can move the zero division check to the setBPM function
-            if bpm > 0 {
-                self.beatTimer.setBPM(bpm: bpm)
-                self.autoCalibrator.collectNewBeat(newBeat: bpm)
-                self.beatFilter.setRawBPM(bpm: bpm)
-            }
-        }
-    }
+    let bleController = BLEController()     // HRM Monitor Connection
+    let lightController = LightController() // Light Connection
+    let beatEmulator = BeatEmulator()             // Independent beat emulator
+    let autoCalibrator = AutoCalibrator()   // Calibrators low and high thresholds
+    let beatFilter = BeatFilter()           // Filters the beats used to be smoother
     
+    // for testing with previously captured heart rate data
+    let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
     
-    func simulationBeat() {
-        
-    }
-    
-    
-    func testBeat() {
-        
-    }
     
     
     init() {
         
         
-        self.beatTimer.beat = {
-            // handler
-        }
-        
     }
     
+    
+    /// Data source from physical BLE heart rate monitor
+    func hrmBeat() {
+        bleController.bpmReceived = {
+            (bpm) in
+            self.beatEmulator.setBPM(bpm)
+        }
+        
+        
+        self.beatEmulator.beat = {
+            (bpmThreadSafe) in
+            
+            
+            // handler
+        }
+    }
+    
+    
+    /// Data source from captured heart rate data
+    func simulationBeat() {
+        simulator.bpmReceived = {
+            (bpm) in
+            self.beatEmulator.setBPM(bpm)
+        }
+        
+        
+        self.beatEmulator.beat = {
+            (bpmThreadSafe) in
+            
+            
+            // handler
+        }
+    }
     
     
     func connectHRM() {
