@@ -1,5 +1,5 @@
 //
-//  BeatModifier.swift
+//  LightModifier.swift
 //  HeartLight
 //
 //  Created by Keith Lee on 2020/04/29.
@@ -81,7 +81,7 @@ struct ColorModifier {
 
 
 
-class BeatModifier {
+class LightModifier {
     
     var brightnessModifier: BrightnessModifier
     var colorModifier: ColorModifier
@@ -98,11 +98,11 @@ class BeatModifier {
     func updateLightsOriginal(brightness: Int, rgb: Int) {
         self.brightnessModifier.updateOriginalValues(brightness)
         self.colorModifier.updateOriginalValues(rgb)
-    } // BeatModifier.updateLightsOriginal()
+    } // LightModifier.updateLightsOriginal()
     
     
-    private func pointMod(_ pointStressScore: Double, _ beatMilliSec: Double, beatTimeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
-        // There are 5 parts to each pulse and each pulse tries to smooth the difference between the last beat and the current beat
+    /// returns (rgb, brightness, milliseconds)
+    private func modify(_ pointStressScore: Double, _ beatMilliSec: Double, beatTimeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
         
         return (
             self.colorModifier.color(pointStressScore),
@@ -112,6 +112,7 @@ class BeatModifier {
     }
     
     
+    // can return value < 0  and  > 1
     func stressScore(bpm: Double, _ lowThreshold: Double, _ highThreshold: Double) -> Double {
         return (bpm - lowThreshold) /
             (highThreshold - lowThreshold)
@@ -128,6 +129,7 @@ class BeatModifier {
     
     
     private func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> (Double, Double, Double, Double, Double) {
+        // each beat has 5 parts.  It takes the previous and current bpm and provides a range of stress scores evently between them.
         
         let stressScore = self.stressScore(bpm: prevBPM, lowThreshold, highThreshold)
         let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
@@ -151,22 +153,22 @@ class BeatModifier {
     /// (rgb, brightness, duration)
     func modifyBeat(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
         
-        
+        // outputs tuple of 5 numbers
+        let stressScores = stressScoreRange(currentBPM, prevBPM, lowThreshold, highThreshold)
         let beatMilliSec: Double = 60.0 / currentBPM * 1000.0
-        let stressScores = stressScoreRange(currentBPM, prevBPM, lowThreshold, highThreshold) // outputs tuple of 5 numbers
         
         return (
-        self.pointMods(stressScores.0, beatMilliSec,
+        self.modify(stressScores.0, beatMilliSec,
                        beatTimeProportion: 0.15, intensityProportion: 0.3),
-        self.pointMods(stressScores.1, beatMilliSec,
+        self.modify(stressScores.1, beatMilliSec,
                        beatTimeProportion: 0.18, intensityProportion: 0.0),
-        self.pointMods(stressScores.2, beatMilliSec,
+        self.modify(stressScores.2, beatMilliSec,
                        beatTimeProportion: 0.15, intensityProportion: 1.0),
-        self.pointMods(stressScores.3, beatMilliSec,
+        self.modify(stressScores.3, beatMilliSec,
                        beatTimeProportion: 0.30, intensityProportion: 0.0),
-        self.pointMods(stressScores.4, beatMilliSec,
+        self.modify(stressScores.4, beatMilliSec,
                        beatTimeProportion: 0.22, intensityProportion: 0.0)
         )
-    } // BeatModifier.modifyBeat()
+    } // LightModifier.modifyBeat()
     
-} // class BeatModifier
+} // class LightModifier

@@ -18,6 +18,20 @@ import YeelightController
   - ability to tweak variables
  */
 
+
+
+class LightModPair {
+    let light: Light
+    let mod: LightModifier
+    
+    init(light: Light, mod: LightModifier) {
+        self.light = light
+        self.mod = mod
+    }
+}
+
+
+
 class Coordinator {
     
     let lightModPairs: [LightModPair] = []

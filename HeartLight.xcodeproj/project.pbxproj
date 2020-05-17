@@ -14,7 +14,6 @@
 		645F6C6A246EDC7A0062BBF0 /* Coordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 645F6C69246EDC7A0062BBF0 /* Coordinator.swift */; };
 		64902D1E2465C37A009D2D76 /* Simulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64902D1D2465C37A009D2D76 /* Simulator.swift */; };
 		64C1726A2459815900955BBD /* libYeelightController.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 64C172692459815900955BBD /* libYeelightController.a */; };
-		64C1726C2459835500955BBD /* LightModPair.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64C1726B2459835500955BBD /* LightModPair.swift */; };
 		64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FA0DD92451F0BA009A46B9 /* main.swift */; };
 		64FA0E2524520EA6009A46B9 /* BluetoothLE.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */; };
 /* End PBXBuildFile section */
@@ -41,7 +40,6 @@
 		64C172672459815900955BBD /* x86_64.swiftdoc */ = {isa = PBXFileReference; lastKnownFileType = file; path = x86_64.swiftdoc; sourceTree = "<group>"; };
 		64C172682459815900955BBD /* x86_64.swiftmodule */ = {isa = PBXFileReference; lastKnownFileType = file; path = x86_64.swiftmodule; sourceTree = "<group>"; };
 		64C172692459815900955BBD /* libYeelightController.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libYeelightController.a; sourceTree = "<group>"; };
-		64C1726B2459835500955BBD /* LightModPair.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModPair.swift; sourceTree = "<group>"; };
 		64FA0DD62451F0BA009A46B9 /* HeartLight */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = HeartLight; sourceTree = BUILT_PRODUCTS_DIR; };
 		64FA0DD92451F0BA009A46B9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BluetoothLE.swift; sourceTree = "<group>"; };
@@ -94,7 +92,6 @@
 				64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */,
 				644A056B2456BC5D00BA3644 /* BeatTimer.swift */,
 				643C418124589C1B00806D0F /* LightModifier.swift */,
-				64C1726B2459835500955BBD /* LightModPair.swift */,
 				64902D1D2465C37A009D2D76 /* Simulator.swift */,
 				64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */,
 				64544E1824669E040043E4B9 /* BeatFilter.swift */,
@@ -178,7 +175,6 @@
 				645F6C6A246EDC7A0062BBF0 /* Coordinator.swift in Sources */,
 				643C418224589C1B00806D0F /* LightModifier.swift in Sources */,
 				64544E1724669DFD0043E4B9 /* AutoCalibrator.swift in Sources */,
-				64C1726C2459835500955BBD /* LightModPair.swift in Sources */,
 				64902D1E2465C37A009D2D76 /* Simulator.swift in Sources */,
 				64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */,
 				64544E1924669E040043E4B9 /* BeatFilter.swift in Sources */,
