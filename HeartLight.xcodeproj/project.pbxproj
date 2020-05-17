@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		643C418224589C1B00806D0F /* BeatModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643C418124589C1B00806D0F /* BeatModifier.swift */; };
+		643C418224589C1B00806D0F /* LightModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643C418124589C1B00806D0F /* LightModifier.swift */; };
 		644A056C2456BC5D00BA3644 /* BeatTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644A056B2456BC5D00BA3644 /* BeatTimer.swift */; };
 		64544E1724669DFD0043E4B9 /* AutoCalibrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */; };
 		64544E1924669E040043E4B9 /* BeatFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64544E1824669E040043E4B9 /* BeatFilter.swift */; };
@@ -32,7 +32,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		643C418124589C1B00806D0F /* BeatModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatModifier.swift; sourceTree = "<group>"; };
+		643C418124589C1B00806D0F /* LightModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModifier.swift; sourceTree = "<group>"; };
 		644A056B2456BC5D00BA3644 /* BeatTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatTimer.swift; sourceTree = "<group>"; };
 		64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCalibrator.swift; sourceTree = "<group>"; };
 		64544E1824669E040043E4B9 /* BeatFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatFilter.swift; sourceTree = "<group>"; };
@@ -93,7 +93,7 @@
 				645F6C69246EDC7A0062BBF0 /* Coordinator.swift */,
 				64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */,
 				644A056B2456BC5D00BA3644 /* BeatTimer.swift */,
-				643C418124589C1B00806D0F /* BeatModifier.swift */,
+				643C418124589C1B00806D0F /* LightModifier.swift */,
 				64C1726B2459835500955BBD /* LightModPair.swift */,
 				64902D1D2465C37A009D2D76 /* Simulator.swift */,
 				64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */,
@@ -176,7 +176,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				645F6C6A246EDC7A0062BBF0 /* Coordinator.swift in Sources */,
-				643C418224589C1B00806D0F /* BeatModifier.swift in Sources */,
+				643C418224589C1B00806D0F /* LightModifier.swift in Sources */,
 				64544E1724669DFD0043E4B9 /* AutoCalibrator.swift in Sources */,
 				64C1726C2459835500955BBD /* LightModPair.swift in Sources */,
 				64902D1E2465C37A009D2D76 /* Simulator.swift in Sources */,
