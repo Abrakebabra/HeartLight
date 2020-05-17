@@ -113,7 +113,7 @@ class LightModifier {
     
     
     // can return value < 0  and  > 1
-    func stressScore(bpm: Double, _ lowThreshold: Double, _ highThreshold: Double) -> Double {
+    class func stressScore(bpm: Double, _ lowThreshold: Double, _ highThreshold: Double) -> Double {
         return (bpm - lowThreshold) /
             (highThreshold - lowThreshold)
     }
@@ -131,14 +131,14 @@ class LightModifier {
     private func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> (Double, Double, Double, Double, Double) {
         // each beat has 5 parts.  It takes the previous and current bpm and provides a range of stress scores evently between them.  Will ensure that it returns 0 <= score <= 1
         
-        let stressScore = self.stressScore(bpm: prevBPM, lowThreshold, highThreshold)
-        let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
+        let stressScorePrev = LightModifier.stressScore(bpm: prevBPM, lowThreshold, highThreshold)
+        let bpmDiffStressScore: Double = LightModifier.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
         
-        var point0 = stressScore + bpmDiffStressScore * 0.2
-        var point1 = stressScore + bpmDiffStressScore * 0.4
-        var point2 = stressScore + bpmDiffStressScore * 0.6
-        var point3 = stressScore + bpmDiffStressScore * 0.8
-        var point4 = stressScore + bpmDiffStressScore
+        var point0 = stressScorePrev + bpmDiffStressScore * 0.2
+        var point1 = stressScorePrev + bpmDiffStressScore * 0.4
+        var point2 = stressScorePrev + bpmDiffStressScore * 0.6
+        var point3 = stressScorePrev + bpmDiffStressScore * 0.8
+        var point4 = stressScorePrev + bpmDiffStressScore
         
         self.stressScoreCheck(&point0)
         self.stressScoreCheck(&point1)

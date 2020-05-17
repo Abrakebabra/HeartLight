@@ -49,14 +49,14 @@ let beatEmulator = BeatEmulator()
 
 
 // holds pairs of lights and their modification objects
-var lightMods: [LightModPair] = []
+//var lightMods: [LightModPair] = []
 
 // get all the lights, create a modifier and store them as a pair
 for (_, light) in controller.lights {
     
     let beatMod = LightModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
-    lightMods.append(LightModPair(light: light, mod: beatMod))
+    //lightMods.append(LightModPair(light: light, mod: beatMod))
 }
 
 
@@ -72,9 +72,9 @@ func beatHandler(source: Source) {
             
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
-                beatEmulator.setBPM(bpm: bpm)
-                autoCalibrator.collectNewBeat(newBeat: bpm)
-                beatFilter.setRawBPM(bpm: bpm)
+                //beatEmulator.setBPM(bpm: bpm)
+                //autoCalibrator.collectNewBeat(newBeat: bpm)
+                //beatFilter.setRawBPM(bpm: bpm)
             }
             
         }
@@ -86,9 +86,9 @@ func beatHandler(source: Source) {
             
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
-                beatEmulator.setBPM(bpm: bpm)
-                autoCalibrator.collectNewBeat(newBeat: bpm)
-                beatFilter.setRawBPM(bpm: bpm)
+                //beatEmulator.setBPM(bpm: bpm)
+                //autoCalibrator.collectNewBeat(newBeat: bpm)
+                //beatFilter.setRawBPM(bpm: bpm)
             }
             
             
@@ -101,9 +101,9 @@ func beatHandler(source: Source) {
             if bpm > 0 {
                 //testCalibrator.collectNewBeat(newBeat: bpm)
                 //testCalibrator.test()
-                beatEmulator.setBPM(bpm: bpm)
-                autoCalibrator.collectNewBeat(newBeat: bpm)
-                beatFilter.setRawBPM(bpm: bpm)
+                //beatEmulator.setBPM(bpm: bpm)
+                //autoCalibrator.collectNewBeat(newBeat: bpm)
+                //beatFilter.setRawBPM(bpm: bpm)
                 
                 let (lowThreshold, highThreshold) = autoCalibrator.getThresholds()
                 let smoothedBPMArray = beatFilter.getFilteredBPM(lowThreshold) // (currBPM, prevBPM)
@@ -111,7 +111,7 @@ func beatHandler(source: Source) {
                 if smoothedBPMArray.0 > lowThreshold {
                     flash = "flash"
                 }
-                print("rawBPM: \(Int(beatFilter.getRawBPM())), smoothedBPM: \(Int(smoothedBPMArray.0)), lowT: \(Int(lowThreshold)), highT: \(Int(highThreshold))    \(flash)")
+                //print("rawBPM: \(Int(beatFilter.getRawBPM())), smoothedBPM: \(Int(smoothedBPMArray.0)), lowT: \(Int(lowThreshold)), highT: \(Int(highThreshold))    \(flash)")
                 
                 
             }
@@ -135,7 +135,9 @@ simulator.simulationComplete = {
 
 let beatQueue = DispatchQueue(label: "Beat Queue")
 
+/*
 beatEmulator.beat = {
+    (_) in
     beatQueue.async {
         
         let (lowThreshold, highThreshold) = autoCalibrator.getThresholds()
@@ -173,7 +175,7 @@ beatEmulator.beat = {
         }
     }
 }
-
+*/
 
 
 

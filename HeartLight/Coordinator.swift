@@ -36,11 +36,13 @@ class Coordinator {
     enum Instructions {
         case run
         case simulation
-        case test
     }
     
+
     
-    let lightModPairs: [LightModPair] = []
+    
+    var allLightModPairs: [LightModPair] = []
+    var activeLightModPairs: [LightModPair] = []
     
     let bleController = BLEController()     // HRM Monitor Connection
     let lightController = LightController() // Light Connection
@@ -59,17 +61,60 @@ class Coordinator {
     }
     
     
-    /// Data source from physical BLE heart rate monitor
-    func hrmBeat() {
-        bleController.bpmReceived = {
+    
+    
+    
+    
+    /// get bpm directly from hrm.  Set in emulator to execute other instructions at that rate.
+    func receiveFromHRM() {
+        self.bleController.bpmReceived = {
             (bpm) in
             self.beatEmulator.setBPM(bpm)
         }
+    }
+    
+    
+    /// get bpm directly from saved source.  Set in emulator to execute other instructions at that rate.
+    func receiveFromSavedData() {
+        self.simulator.bpmReceived = {
+            (bpm) in
+            self.beatEmulator.setBPM(bpm)
+        }
+    }
+    
+    
+    /// Data source from physical BLE heart rate monitor
+    func beatReceiveAndEmulate(action: Instructions) {
+        
+        switch action {
+        case .run:
+            self.receiveFromHRM()
+            
+        case .simulation:
+            self.receiveFromSavedData()
+        }
+        
+        
+        
         
         
         self.beatEmulator.beat = {
             (bpmThreadSafe) in
+            self.autoCalibrator.collectNewBeat(newBeat: bpmThreadSafe)
+            self.beatFilter.setBPM(bpm: bpmThreadSafe)
             
+            
+            let (lowThreshold, highThreshold) = self.autoCalibrator.getThresholds()
+            let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
+            
+            let generalStressScore = LightModifier.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
+            
+            // if generalStressScore is x above high threshold, start turning off lights etc.
+            
+            
+            for pair in self.activeLightModPairs {
+                //
+            }
             
             // handler
         }
@@ -78,10 +123,7 @@ class Coordinator {
     
     /// Data source from captured heart rate data
     func simulationBeat() {
-        simulator.bpmReceived = {
-            (bpm) in
-            self.beatEmulator.setBPM(bpm)
-        }
+        
         
         
         self.beatEmulator.beat = {
@@ -103,6 +145,32 @@ class Coordinator {
     }
     
     
+    func prepareMods() {
+        for (_, light) in self.lightController.lights {
+            let mod = LightModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
+            self.allLightModPairs.append(Coordinator.LightModPair(light: light, mod: mod))
+        }
+    }
+    
+    
+    // when currently flashing and about to not flash
+    func shuffleLightModPair() {
+        for i in 0..<self.allLightModPairs.count {
+            let randomPos = Int.random(in: 0..<self.allLightModPairs.count)
+            self.allLightModPairs.swapAt(i, randomPos)
+        }
+    }
+    
+    
+    
+    func selectedLights() {
+        // pick a number of lights based on the stressScore being over 1.
+        // turn that number of lights off at back of array
+        // from front of array, count number of lights to keep
+    }
+    
+    
+    
     func beatInstructions(instructions: Instructions) {
         
     }
@@ -111,4 +179,7 @@ class Coordinator {
     
     
     
-}
+} // class Coordinator
+
+
+
