@@ -135,7 +135,7 @@ class BeatFilter {
     
     
     /// to be accessed by the program, on thread independent to the source
-    private func getRawBPM() -> Double {
+    func getRawBPM() -> Double {
         bpmSemaphore.wait()
         let bpm = self.bpm
         bpmSemaphore.signal()

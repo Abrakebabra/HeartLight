@@ -90,11 +90,11 @@
 				64FA0DD92451F0BA009A46B9 /* main.swift */,
 				645F6C69246EDC7A0062BBF0 /* Coordinator.swift */,
 				64FA0E2424520EA6009A46B9 /* BluetoothLE.swift */,
+				64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */,
+				64544E1824669E040043E4B9 /* BeatFilter.swift */,
 				644A056B2456BC5D00BA3644 /* BeatEmulator.swift */,
 				643C418124589C1B00806D0F /* LightModifier.swift */,
 				64902D1D2465C37A009D2D76 /* Simulator.swift */,
-				64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */,
-				64544E1824669E040043E4B9 /* BeatFilter.swift */,
 			);
 			path = HeartLight;
 			sourceTree = "<group>";

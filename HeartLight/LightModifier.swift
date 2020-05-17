@@ -102,12 +102,12 @@ class LightModifier {
     
     
     /// returns (rgb, brightness, milliseconds)
-    private func modify(_ pointStressScore: Double, _ beatMilliSec: Double, beatTimeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
+    private func modify(_ pointStressScore: Double, _ beatMilliSec: Double, timeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
         
         return (
             self.colorModifier.color(pointStressScore),
             self.brightnessModifier.brightness(pointStressScore, intensityProportion),
-            Int(beatMilliSec * beatTimeProportion)
+            Int(beatMilliSec * timeProportion)
         )
     }
     
@@ -129,7 +129,7 @@ class LightModifier {
     
     
     private func stressScoreRange(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> (Double, Double, Double, Double, Double) {
-        // each beat has 5 parts.  It takes the previous and current bpm and provides a range of stress scores evently between them.
+        // each beat has 5 parts.  It takes the previous and current bpm and provides a range of stress scores evently between them.  Will ensure that it returns 0 <= score <= 1
         
         let stressScore = self.stressScore(bpm: prevBPM, lowThreshold, highThreshold)
         let bpmDiffStressScore: Double = self.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
@@ -154,20 +154,15 @@ class LightModifier {
     func modifyBeat(_ currentBPM: Double, _ prevBPM: Double, _ lowThreshold: Double, _ highThreshold: Double) -> ((Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int), (Int, Int, Int)) {
         
         // outputs tuple of 5 numbers
-        let stressScores = stressScoreRange(currentBPM, prevBPM, lowThreshold, highThreshold)
+        let (stressScore0, stressScore1, stressScore2, stressScore3, stressScore4) = stressScoreRange(currentBPM, prevBPM, lowThreshold, highThreshold)
         let beatMilliSec: Double = 60.0 / currentBPM * 1000.0
         
         return (
-        self.modify(stressScores.0, beatMilliSec,
-                       beatTimeProportion: 0.15, intensityProportion: 0.3),
-        self.modify(stressScores.1, beatMilliSec,
-                       beatTimeProportion: 0.18, intensityProportion: 0.0),
-        self.modify(stressScores.2, beatMilliSec,
-                       beatTimeProportion: 0.15, intensityProportion: 1.0),
-        self.modify(stressScores.3, beatMilliSec,
-                       beatTimeProportion: 0.30, intensityProportion: 0.0),
-        self.modify(stressScores.4, beatMilliSec,
-                       beatTimeProportion: 0.22, intensityProportion: 0.0)
+        self.modify(stressScore0, beatMilliSec, timeProportion: 0.15, intensityProportion: 0.3),
+        self.modify(stressScore1, beatMilliSec, timeProportion: 0.18, intensityProportion: 0.0),
+        self.modify(stressScore2, beatMilliSec, timeProportion: 0.15, intensityProportion: 1.0),
+        self.modify(stressScore3, beatMilliSec, timeProportion: 0.30, intensityProportion: 0.0),
+        self.modify(stressScore4, beatMilliSec, timeProportion: 0.22, intensityProportion: 0.0)
         )
     } // LightModifier.modifyBeat()
     

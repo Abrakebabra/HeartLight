@@ -45,7 +45,7 @@ let autoCalibrator = AutoCalibrator()
 let beatFilter = BeatFilter()
 
 // an asynchronous timer that loops in time with the heart rate to send messages to the light independent of the rate the bpm notifications are received
-let beatTimer = BeatTimer()
+let beatEmulator = BeatEmulator()
 
 
 // holds pairs of lights and their modification objects
@@ -54,7 +54,7 @@ var lightMods: [LightModPair] = []
 // get all the lights, create a modifier and store them as a pair
 for (_, light) in controller.lights {
     
-    let beatMod = BeatModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
+    let beatMod = LightModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
     
     lightMods.append(LightModPair(light: light, mod: beatMod))
 }
@@ -72,7 +72,7 @@ func beatHandler(source: Source) {
             
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
-                beatTimer.setBPM(bpm: bpm)
+                beatEmulator.setBPM(bpm: bpm)
                 autoCalibrator.collectNewBeat(newBeat: bpm)
                 beatFilter.setRawBPM(bpm: bpm)
             }
@@ -86,7 +86,7 @@ func beatHandler(source: Source) {
             
             // a fix until I can move the zero division check to the setBPM function
             if bpm > 0 {
-                beatTimer.setBPM(bpm: bpm)
+                beatEmulator.setBPM(bpm: bpm)
                 autoCalibrator.collectNewBeat(newBeat: bpm)
                 beatFilter.setRawBPM(bpm: bpm)
             }
@@ -101,13 +101,11 @@ func beatHandler(source: Source) {
             if bpm > 0 {
                 //testCalibrator.collectNewBeat(newBeat: bpm)
                 //testCalibrator.test()
-                beatTimer.setBPM(bpm: bpm)
+                beatEmulator.setBPM(bpm: bpm)
                 autoCalibrator.collectNewBeat(newBeat: bpm)
                 beatFilter.setRawBPM(bpm: bpm)
                 
-                autoCalibrator.getThresholds()
-                let lowThreshold = autoCalibrator.lowThreshold
-                let highThreshold = autoCalibrator.highThreshold
+                let (lowThreshold, highThreshold) = autoCalibrator.getThresholds()
                 let smoothedBPMArray = beatFilter.getFilteredBPM(lowThreshold) // (currBPM, prevBPM)
                 var flash = ""
                 if smoothedBPMArray.0 > lowThreshold {
@@ -137,13 +135,11 @@ simulator.simulationComplete = {
 
 let beatQueue = DispatchQueue(label: "Beat Queue")
 
-beatTimer.beat = {
+beatEmulator.beat = {
     beatQueue.async {
         
-        autoCalibrator.getThresholds()
-        let lowThreshold = autoCalibrator.lowThreshold
-        let highThreshold = autoCalibrator.highThreshold
-        let smoothedBPMArray = beatFilter.bpmFilter(lowThreshold) // (currBPM, prevBPM)
+        let (lowThreshold, highThreshold) = autoCalibrator.getThresholds()
+        let smoothedBPMArray = beatFilter.getFilteredBPM(lowThreshold) // (currBPM, prevBPM)
         print("rawBPM: \(beatFilter.getRawBPM()), smoothedBPM: \(smoothedBPMArray.0), lowT: \(lowThreshold), highT: \(highThreshold)")
         
         
@@ -216,7 +212,7 @@ while runProgram == true {
     case "go":
         if inputActive == false {
             musicOn()
-            beatTimer.start()
+            beatEmulator.start()
             beatHandler(source: .hrm)
             inputActive = true
         } else {
@@ -226,7 +222,7 @@ while runProgram == true {
     case "sim":
         if inputActive == false {
             musicOn()
-            beatTimer.start()
+            beatEmulator.start()
             beatHandler(source: .simulation)
             inputActive = true
         } else {
@@ -246,7 +242,7 @@ while runProgram == true {
         musicOff()
         
     case "exit":
-        beatTimer.end()
+        beatEmulator.end()
         for (key, _) in controller.lights {
             controller.lights[key]?.tcp.conn.cancel()
         }
