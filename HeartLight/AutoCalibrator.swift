@@ -55,7 +55,8 @@ class AutoCalibrator {
     }
     
     
-    func getThresholds()  {
+    /// (lowThreshold, highThreshold)
+    func getThresholds() -> (Double, Double) {
         self.semaphore.wait()
         defer {
             self.semaphore.signal()
@@ -63,7 +64,7 @@ class AutoCalibrator {
         
         // collect at least 2 minutes worth of data (completely arbitrary choice - 11 May, 2020)
         if self.lastTenMinutes.count < 20 {
-            return
+            return (self.lowThreshold, self.highThreshold)
         }
         
         let ordered: [Int] = self.lastTenMinutes.sorted()
@@ -78,6 +79,7 @@ class AutoCalibrator {
         let upperQuartileElement = Int(ceil(numOfElements / 4 * 3))
         self.highThreshold = Double(ordered[upperQuartileElement]) * 1.4
         
+        return (self.lowThreshold, self.highThreshold)
         
     }
 }
@@ -121,7 +123,7 @@ class TestCalibrator: AutoCalibrator {
     
     
     func test() {
-        self.getThresholds()
+        let _ = self.getThresholds()
         var flash: String = ""
         
         if Double(self.bpm) > self.highThreshold {

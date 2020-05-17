@@ -108,7 +108,7 @@ func beatHandler(source: Source) {
                 autoCalibrator.getThresholds()
                 let lowThreshold = autoCalibrator.lowThreshold
                 let highThreshold = autoCalibrator.highThreshold
-                let smoothedBPMArray = beatFilter.bpmFilter(lowThreshold) // (currBPM, prevBPM)
+                let smoothedBPMArray = beatFilter.getFilteredBPM(lowThreshold) // (currBPM, prevBPM)
                 var flash = ""
                 if smoothedBPMArray.0 > lowThreshold {
                     flash = "flash"

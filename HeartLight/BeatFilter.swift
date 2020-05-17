@@ -29,7 +29,7 @@ class BeatVehicle {
     private var target: Double = 60.0
     private var acceleration: Double = 0.0
     private var velocity: Double = 0.0
-    private var maxVelocity: Double = 12.0
+    private var maxVelocity: Double = 0.0
     
     
     
@@ -52,7 +52,7 @@ class BeatVehicle {
     
     
     private func setMaxVelocity() {
-        // arrival brakes if 12 or under bpm away from target
+        // arrival brakes if 12 or under bpm away from target in any direction
         if abs(self.distanceToTarget()) <= 12.0 {
             
             // check direction
@@ -67,7 +67,12 @@ class BeatVehicle {
             
             // full speed ahead
         } else {
-            self.maxVelocity = 24.0
+            if self.distanceToTarget() > 0 {
+                self.maxVelocity = 24.0
+                
+            } else {
+                self.maxVelocity = -6.0
+            }
         }
     }
     
@@ -130,7 +135,7 @@ class BeatFilter {
     
     
     /// to be accessed by the program, on thread independent to the source
-    func getRawBPM() -> Double {
+    private func getRawBPM() -> Double {
         bpmSemaphore.wait()
         let bpm = self.bpm
         bpmSemaphore.signal()
@@ -209,8 +214,8 @@ class BeatFilter {
         
     } // BeatFilter.ensureMinFlashCount()
     
-    
-    func bpmFilter(_ lowThreshold: Double) -> (Double, Double) {
+    /// (current, previous)
+    func getFilteredBPM(_ lowThreshold: Double) -> (Double, Double) {
         self.bpmSmoothed.update(bpm: self.getRawBPM())
         var bpmSmoothed = self.bpmSmoothed.bpmPosition
         

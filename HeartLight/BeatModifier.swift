@@ -29,7 +29,6 @@ struct BrightnessModifier {
     /// (brightnessBaseline, amplitude)  Max/min brightness is baseline +/- amplitude.
     func brightness(_ stressScore: Double, _ pulseProportion: Double) -> Int {
         
-        //CHECK - CAN THIS RESULT OVER 100 OR UNDER 1?
         let maxPulse = stressScore * Double(BrightnessModifier.maxPulse)
         let baseline = self.original - stressScore * self.baseRange
         
@@ -102,7 +101,7 @@ class BeatModifier {
     } // BeatModifier.updateLightsOriginal()
     
     
-    private func pointMods(_ pointStressScore: Double, _ beatMilliSec: Double, beatTimeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
+    private func pointMod(_ pointStressScore: Double, _ beatMilliSec: Double, beatTimeProportion: Double, intensityProportion: Double) -> (Int, Int, Int) {
         // There are 5 parts to each pulse and each pulse tries to smooth the difference between the last beat and the current beat
         
         return (
