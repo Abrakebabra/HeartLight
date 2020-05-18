@@ -132,7 +132,8 @@ class LightModifier {
         // each beat has 5 parts.  It takes the previous and current bpm and provides a range of stress scores evently between them.  Will ensure that it returns 0 <= score <= 1
         
         let stressScorePrev = LightModifier.stressScore(bpm: prevBPM, lowThreshold, highThreshold)
-        let bpmDiffStressScore: Double = LightModifier.stressScore(bpm: currentBPM - prevBPM, lowThreshold, highThreshold)
+        let stressScoreCurr = LightModifier.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
+        let bpmDiffStressScore = stressScoreCurr - stressScorePrev
         
         var point0 = stressScorePrev + bpmDiffStressScore * 0.2
         var point1 = stressScorePrev + bpmDiffStressScore * 0.4
