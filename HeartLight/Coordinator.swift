@@ -46,7 +46,7 @@ class Coordinator {
     
     private let bleController = BLEController()     // HRM Monitor Connection
     private let lightController = LightController() // Light Connection
-    private let beatEmulator = BeatEmulator()             // Independent beat emulator
+    private let beatEmulator = BeatEmulator()       // Independent beat emulator
     private let autoCalibrator = AutoCalibrator()   // Calibrators low and high thresholds
     private let beatFilter = BeatFilter()           // Filters the beats used to be smoother
     
@@ -113,7 +113,7 @@ class Coordinator {
             let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
             
             // debug for now?
-            print("bpm: \(Int(bpmThreadSafe))  cbpm: \(Int(currentBPM))  pbpm: \(Int(previousBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
+            print("bpmRaw: \(Int(bpmThreadSafe))  bpmSmoothed: \(Int(currentBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
             // future feature:
             // if generalStressScore is x above high threshold, start turning off lights etc.
             // later, change to self.activeLightModPairs
@@ -189,7 +189,7 @@ class Coordinator {
         
         sleep(1)
         // disconnect ble hrm (check, what if not connected already?) - optional
-        // self.bleController.cancelPeripheralConnection(self.bleController.heartRatePeripheral)
+        self.bleController.cancelHRMConnection()
     }
     
     
@@ -278,7 +278,7 @@ extension Coordinator {
             let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
             
             // debug for now?
-            print("bpm: \(Int(bpmThreadSafe))  cbpm: \(Int(currentBPM))  pbpm: \(Int(previousBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
+            print("bpmRaw: \(Int(bpmThreadSafe))  bpmSmoothed: \(Int(currentBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
             // future feature:
             // if generalStressScore is x above high threshold, start turning off lights etc.
             // later, change to self.activeLightModPairs

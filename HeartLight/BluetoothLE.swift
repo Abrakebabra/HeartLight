@@ -31,9 +31,7 @@ import CoreBluetooth
 
 
 
-// GATT Services
-// https://www.bluetooth.com/specifications/gatt/services/
-let heartRateServiceCBUUID = CBUUID(string: "0x180D")
+
 
 
 
@@ -50,8 +48,13 @@ class BLEController: CBCentralManager {
     }
     
     
-    var centralManager: CBCentralManager!
-    var heartRatePeripheral: CBPeripheral!
+    var centralManager: CBCentralManager?
+    var heartRatePeripheral: CBPeripheral?
+    
+    
+    // GATT Services
+    // https://www.bluetooth.com/specifications/gatt/services/
+    let heartRateServiceCBUUID = CBUUID(string: "0x180D")
     
     // GATT CHARACTERISTICS
     // https://www.bluetooth.com/specifications/gatt/characteristics/
@@ -65,7 +68,7 @@ class BLEController: CBCentralManager {
     func start() -> Void {
         print("bluetooth module started")
         // does this automatically start the scanner?
-        centralManager = CBCentralManager(delegate: self, queue: self.btQueue)
+        self.centralManager = CBCentralManager(delegate: self, queue: self.btQueue)
     }
     
     
@@ -76,10 +79,18 @@ class BLEController: CBCentralManager {
         
         print(peripheral)
         
-        heartRatePeripheral = peripheral
-        heartRatePeripheral.delegate = self
-        centralManager.stopScan()
-        centralManager.connect(heartRatePeripheral)
+        self.heartRatePeripheral = peripheral
+        guard let hrm = self.heartRatePeripheral else {
+            return
+        }
+        
+        guard let cManager = self.centralManager else {
+            return
+        }
+        
+        hrm.delegate = self
+        cManager.stopScan()
+        cManager.connect(hrm)
     }
     
     
@@ -87,7 +98,10 @@ class BLEController: CBCentralManager {
     func centralManager(_ central: CBCentralManager,
                         didConnect peripheral: CBPeripheral) {
         print("Connected!")
-        heartRatePeripheral.discoverServices(nil)
+        guard let hrm = self.heartRatePeripheral else {
+            return
+        }
+        hrm.discoverServices(nil)
     }
     
     
@@ -95,6 +109,17 @@ class BLEController: CBCentralManager {
     func onHeartRateReceived(_ heartRate: Int) {
         self.bpm = heartRate
     }
+    
+    
+    func cancelHRMConnection() {
+        guard let hrm = heartRatePeripheral else {
+            return
+        }
+        self.cancelPeripheralConnection(hrm)
+    }
+    
+    
+    
 }
 
 
@@ -115,7 +140,10 @@ extension BLEController: CBCentralManagerDelegate {
             print("central.state is .poweredOff")
         case .poweredOn:
             print("central.state is .poweredOn")
-            centralManager.scanForPeripherals(withServices: [heartRateServiceCBUUID])
+            guard let cManager = centralManager else {
+                return
+            }
+            cManager.scanForPeripherals(withServices: [self.heartRateServiceCBUUID])
         @unknown default:
             return
         }
@@ -157,12 +185,12 @@ extension BLEController: CBPeripheralDelegate {
                     error: Error?) {
         switch characteristic.uuid {
             
-        case batteryLevelCharacteristicCBUUID:
+        case self.batteryLevelCharacteristicCBUUID:
             let percent = batteryLevel(from: characteristic)
             print("Battery level: \(percent)%")
-        case heartRateMeasurementCharacteristicCBUUID:
-            let bpm = heartRate(from: characteristic)
-            onHeartRateReceived(bpm)
+        case self.heartRateMeasurementCharacteristicCBUUID:
+            let bpm = self.heartRate(from: characteristic)
+            self.onHeartRateReceived(bpm)
         default:
             print("Unhandled Characteristic UUID: \(characteristic.uuid)")
         }

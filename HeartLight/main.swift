@@ -7,29 +7,14 @@
 //
 
 import Foundation
-
 import YeelightController
 
 
-// checks for command line inputs
-var runProgram = true
 
-// a check that the program cannot be started twice
-var inputActive = false
-
+var runProgram = true // checks for command line inputs
+var inputActive = false // a check that the program cannot be started twice
 
 let coordinator = Coordinator()
-
-
-/*
-    simulator.simulationComplete = {
-        print("Max flashes: \(testCalibrator.maxFlashCount / testCalibrator.beatReceived)")
-        print("Med flashes: \(testCalibrator.medFlashCount / testCalibrator.beatReceived)")
-        print("Flashes: \(testCalibrator.flashCount / testCalibrator.beatReceived)")
-        print("Small flashes: \(testCalibrator.smallFlashCount / testCalibrator.beatReceived)")
-    }
-*/
-
 
 
 while runProgram == true {
