@@ -66,8 +66,6 @@ class BLEController: CBCentralManager {
     
     // called externally
     func start() -> Void {
-        print("bluetooth module started")
-        // does this automatically start the scanner?
         self.centralManager = CBCentralManager(delegate: self, queue: self.btQueue)
     }
     
@@ -76,8 +74,6 @@ class BLEController: CBCentralManager {
                         didDiscover peripheral: CBPeripheral,
                         advertisementData: [String: Any],
                         rssi RSSI: NSNumber) {
-        
-        print(peripheral)
         
         self.heartRatePeripheral = peripheral
         guard let hrm = self.heartRatePeripheral else {
@@ -91,13 +87,13 @@ class BLEController: CBCentralManager {
         hrm.delegate = self
         cManager.stopScan()
         cManager.connect(hrm)
+        print("Connected to HRM!")
     }
     
     
     
     func centralManager(_ central: CBCentralManager,
                         didConnect peripheral: CBPeripheral) {
-        print("Connected!")
         guard let hrm = self.heartRatePeripheral else {
             return
         }
@@ -116,6 +112,7 @@ class BLEController: CBCentralManager {
             return
         }
         self.cancelPeripheralConnection(hrm)
+        
     }
     
     
@@ -139,7 +136,7 @@ extension BLEController: CBCentralManagerDelegate {
         case .poweredOff:
             print("central.state is .poweredOff")
         case .poweredOn:
-            print("central.state is .poweredOn")
+            print("Bluetooth module is on.  Searching...")
             guard let cManager = centralManager else {
                 return
             }
@@ -157,42 +154,40 @@ extension BLEController: CBPeripheralDelegate {
         guard let services = peripheral.services else { return }
         
         for service in services {
-            // print(service)
             peripheral.discoverCharacteristics(nil, for: service)
         }
     }
     
     
-    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService,
-                    error: Error?) {
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         guard let characteristics = service.characteristics else { return }
         
         for characteristic in characteristics {
-            // print(characteristic)
             if characteristic.properties.contains(.read) {
-                // print("\(characteristic.uuid): properties contains .read")
                 peripheral.readValue(for: characteristic)
             }
+            
             if characteristic.properties.contains(.notify) {
-                // print("\(characteristic.uuid): properties contains .notify")
                 peripheral.setNotifyValue(true, for: characteristic)
             }
         }
     }
     
     
-    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic,
-                    error: Error?) {
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        
         switch characteristic.uuid {
-            
         case self.batteryLevelCharacteristicCBUUID:
-            let percent = batteryLevel(from: characteristic)
-            print("Battery level: \(percent)%")
+            // let percent = batteryLevel(from: characteristic)
+            // print("Battery level: \(percent)%")
+            return
+            
         case self.heartRateMeasurementCharacteristicCBUUID:
             let bpm = self.heartRate(from: characteristic)
             self.onHeartRateReceived(bpm)
+            
         default:
-            print("Unhandled Characteristic UUID: \(characteristic.uuid)")
+            return
         }
     }
     

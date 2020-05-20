@@ -14,7 +14,14 @@ class BeatEmulator {
     private let timerQueue = DispatchQueue(label: "Timer Queue")
     private let bpmSemaphore = DispatchSemaphore(value: 1)
     private var timerActive: Bool = true
-    private var bpm: Double = 30.0
+    private var bpm: Double = 30.0 {
+        willSet {
+            self.bpmSemaphore.wait()
+        }
+        didSet {
+            self.bpmSemaphore.signal()
+        }
+    }
     
     /// Code within the closure is run each time the emulator completes a "beat".  bpm is passed into the closure to be safely used without semaphores.
     var beat: ((Double) -> Void)?
@@ -23,9 +30,7 @@ class BeatEmulator {
     /// Update the rate the emulator should loop at.  Will handle bpm of 0.
     func setBPM(_ bpm: Int) {
         if bpm > 0 {
-            self.bpmSemaphore.wait()
             self.bpm = Double(bpm)
-            self.bpmSemaphore.signal()
             
         } else {
             print("BeatEmulator:  bpm received is 0")

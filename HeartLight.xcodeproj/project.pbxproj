@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		641B2D5D2475986600041BA8 /* DataCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 641B2D5C2475986600041BA8 /* DataCollection.swift */; };
 		643C418224589C1B00806D0F /* LightModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643C418124589C1B00806D0F /* LightModifier.swift */; };
 		644A056C2456BC5D00BA3644 /* BeatEmulator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 644A056B2456BC5D00BA3644 /* BeatEmulator.swift */; };
 		64544E1724669DFD0043E4B9 /* AutoCalibrator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */; };
@@ -31,6 +32,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		641B2D5C2475986600041BA8 /* DataCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataCollection.swift; sourceTree = "<group>"; };
 		643C418124589C1B00806D0F /* LightModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightModifier.swift; sourceTree = "<group>"; };
 		644A056B2456BC5D00BA3644 /* BeatEmulator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeatEmulator.swift; sourceTree = "<group>"; };
 		64544E1624669DFD0043E4B9 /* AutoCalibrator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoCalibrator.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 				64544E1824669E040043E4B9 /* BeatFilter.swift */,
 				643C418124589C1B00806D0F /* LightModifier.swift */,
 				64902D1D2465C37A009D2D76 /* Simulator.swift */,
+				641B2D5C2475986600041BA8 /* DataCollection.swift */,
 			);
 			path = HeartLight;
 			sourceTree = "<group>";
@@ -178,6 +181,7 @@
 				64902D1E2465C37A009D2D76 /* Simulator.swift in Sources */,
 				64FA0DDA2451F0BA009A46B9 /* main.swift in Sources */,
 				64544E1924669E040043E4B9 /* BeatFilter.swift in Sources */,
+				641B2D5D2475986600041BA8 /* DataCollection.swift in Sources */,
 				644A056C2456BC5D00BA3644 /* BeatEmulator.swift in Sources */,
 				64FA0E2524520EA6009A46B9 /* BluetoothLE.swift in Sources */,
 			);

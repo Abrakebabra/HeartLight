@@ -19,6 +19,16 @@ import YeelightController
  */
 
 
+// Light is returning non-JSON data
+// Error Domain=NSCocoaErrorDomain Code=3840 "Garbage at end." UserInfo={NSDebugDescription=Garbage at end.}
+
+// TCP DATA RECEIVED ERROR.  DATA:  Optional("{\"id\":1,\"result\":[\"ok\"]}\r\n{\"id\":2,\"result\":[\"ok\"]}\r\n")
+// Error Domain=NSCocoaErrorDomain Code=3840 "Garbage at end." UserInfo={NSDebugDescription=Garbage at end.}
+
+
+// if bpm is 0, then notify coordinator that there is no hrm connected and to stop flashing.
+// start emulator after hrm is connected
+
 
 class Coordinator {
     
@@ -49,6 +59,7 @@ class Coordinator {
     private let beatEmulator = BeatEmulator()       // Independent beat emulator
     private let autoCalibrator = AutoCalibrator()   // Calibrators low and high thresholds
     private let beatFilter = BeatFilter()           // Filters the beats used to be smoother
+    private let dataCollection = DataCollection()   // Allows capture of hrm data
     
     // for testing with previously captured heart rate data
     private let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
@@ -56,7 +67,6 @@ class Coordinator {
     
     
     init() {
-        
         
         
         
@@ -74,6 +84,7 @@ class Coordinator {
         self.bleController.bpmReceived = {
             (bpm) in
             self.beatEmulator.setBPM(bpm)
+            self.dataCollection.saveData(bpm)
         }
     }
     
@@ -138,6 +149,8 @@ class Coordinator {
         for (_, light) in self.lightController.lights {
             let mod = LightModifier(brightnessOriginal: light.state.brightness, rgb: light.state.rgb)
             self.allLightModPairs.append(Coordinator.LightModPair(light: light, mod: mod))
+            // debug
+            // light.printCommunications(true)
         }
     }
     
@@ -161,17 +174,15 @@ class Coordinator {
     
     
     func beatInstructions(instructions: Instructions) {
-        self.connectLights()
-        sleep(3) // for now
-        self.prepareMods()
+        self.connectLights() // blocks thread
+        
+        self.prepareMods() // creates modification object and pairs to that light
         
         for pair in self.allLightModPairs {
             self.lightUnlimitedTCPActivate(affecting: pair.light)
         }
         
         self.beatReceiveAndEmulate(action: instructions)
-        
-        
     }
     
     
@@ -181,15 +192,20 @@ class Coordinator {
             self.lightUnlimitedTCPDeactivate(affecting: pair.light)
         }
         
-        sleep(1)
-        
-        for (key, _) in self.lightController.lights {
-            self.lightController.lights[key]?.tcp.conn.cancel()
+        // cancel connection
+        for pair in self.allLightModPairs {
+            pair.light.limitlessTCP?.conn.cancel()
         }
         
-        sleep(1)
         // disconnect ble hrm (check, what if not connected already?) - optional
         self.bleController.cancelHRMConnection()
+        
+        sleep(1)
+    }
+    
+    
+    func saveHeartRateData() {
+        self.dataCollection.saveToFile()
     }
     
     
@@ -260,7 +276,6 @@ extension Coordinator {
 extension Coordinator {
     func test() {
         self.connectLights()
-        sleep(3) // for now
         self.prepareMods()
         self.simulator.overrideDataNotificationTime(time: 0.0)
         self.simulator.simulate()

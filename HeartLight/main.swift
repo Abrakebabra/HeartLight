@@ -47,7 +47,8 @@ while runProgram == true {
         }
         
     case "exit":
-        
+        print("Saving...")
+        coordinator.saveHeartRateData()
         print("Exiting...")
         coordinator.shutdown()
         print("Successfully shut down")

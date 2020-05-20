@@ -10,18 +10,7 @@ import Foundation
 
 
 
-// structure of the JSON file read and written
-// {"arrayHeartRate":[Int]}
-fileprivate struct EncodableArray: Codable {
-    let arrayHeartRate: [Int]
-}
-
-
-
 class Simulator {
-    // needs a 1 second timer
-    // needs its own queue
-    
     private let simulationTimerQueue = DispatchQueue(label: "Simulator")
     private var hrmRecord: [Int]? = nil
     
