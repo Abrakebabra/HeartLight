@@ -67,8 +67,7 @@ class AutoCalibrator {
         
         // based off this person's experiment:
         // http://campus.murraystate.edu/academic/faculty/tderting/samplelab.html
-        let upperQuartileElement = Int(ceil(numOfElements / 4 * 3))
-        self.highThreshold = ordered[upperQuartileElement] * 1.4
+        self.highThreshold = ordered[lowerQuartileElement] * 1.4
         
         return (self.lowThreshold, self.highThreshold)
         

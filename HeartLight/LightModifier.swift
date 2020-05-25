@@ -147,6 +147,9 @@ class LightModifier {
         self.stressScoreCheck(&point3)
         self.stressScoreCheck(&point4)
         
+        // debug
+        // print("\(point0), \(point1), \(point2), \(point3), \(point4)")
+        
         return (point0, point1, point2, point3, point4)
     }
     

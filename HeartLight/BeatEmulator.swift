@@ -14,7 +14,7 @@ class BeatEmulator {
     private let timerQueue = DispatchQueue(label: "Timer Queue")
     private let bpmSemaphore = DispatchSemaphore(value: 1)
     private var timerActive: Bool = true
-    private var bpm: Double = 30.0 {
+    private var bpm: Double = 60.0 {
         willSet {
             self.bpmSemaphore.wait()
         }

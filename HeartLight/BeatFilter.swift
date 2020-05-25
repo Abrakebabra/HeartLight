@@ -42,11 +42,12 @@ class BeatVehicle {
     private func directionAndMagnitude() {
         // rising
         if self.distanceToTarget() > 0.0 {
-            self.acceleration = ceil(  self.distanceToTarget() / 4.0  )
+            self.acceleration = ceil(  self.distanceToTarget() / 2.0  )
             
         // falling
         } else {
-            self.acceleration = floor(  self.distanceToTarget() / 8.0  )
+            // self.acceleration = floor(  self.distanceToTarget() / 16.0  )
+            self.acceleration = -1.0
         }
     }
     
@@ -71,7 +72,7 @@ class BeatVehicle {
                 self.maxVelocity = 24.0
                 
             } else {
-                self.maxVelocity = -6.0
+                self.maxVelocity = -2.0
             }
         }
     }

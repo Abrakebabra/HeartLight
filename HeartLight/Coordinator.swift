@@ -62,17 +62,10 @@ class Coordinator {
     private let dataCollection = DataCollection()   // Allows capture of hrm data
     
     // for testing with previously captured heart rate data
-    private let simulator = Simulator(fileNameWithExtension: "HeartRateData 02.json")
+    private let simulator = Simulator(fileNameWithExtension: "HeartRateData 04.json")
     
+    private let dispatchQueue = DispatchQueue(label: "Working Thread", attributes: .concurrent)
     
-    
-    init() {
-        
-        
-        
-        
-        
-    }
     
     
     private func connectHRM() {
@@ -81,11 +74,17 @@ class Coordinator {
     
     /// get bpm directly from hrm.  Set in emulator to execute other instructions at that rate.
     private func receiveFromHRM() {
-        self.bleController.bpmReceived = {
-            (bpm) in
-            self.beatEmulator.setBPM(bpm)
-            self.dataCollection.saveData(bpm)
+        
+        self.dispatchQueue.async {
+            self.bleController.bpmReceived = {
+                (bpm) in
+                
+                self.beatEmulator.setBPM(bpm)
+                self.dataCollection.saveData(bpm)
+                
+            }
         }
+        
     }
     
     
@@ -111,35 +110,40 @@ class Coordinator {
             self.simulator.simulate()
         }
         
-        self.beatEmulator.start()
-        
-        self.beatEmulator.beat = {
-            (bpmThreadSafe) in
-            
-            
-            self.autoCalibrator.collectNewBeat(newBeat: bpmThreadSafe)
-            self.beatFilter.setBPM(bpm: bpmThreadSafe)
-            
-            let (lowThreshold, highThreshold) = self.autoCalibrator.getThresholds()
-            let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
-            
-            // debug for now?
-            print("bpmRaw: \(Int(bpmThreadSafe))  bpmSmoothed: \(Int(currentBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
-            // future feature:
-            // if generalStressScore is x above high threshold, start turning off lights etc.
-            // later, change to self.activeLightModPairs
-            
-            // let generalStressScore = LightModifier.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
-            
-            for pair in self.allLightModPairs {
-                
-                // (rgb, brightness, duration)
-                let mod = pair.mod.modifyBeat(currentBPM, previousBPM, lowThreshold, highThreshold)
-                
-                self.lightInstructions(to: pair.light, with: mod)
-                
-            }
+        self.bleController.hrmConnected = {
+            self.beatEmulator.start()
         }
+        
+        self.dispatchQueue.async {
+            self.beatEmulator.beat = {
+                (bpmThreadSafe) in
+                
+                self.autoCalibrator.collectNewBeat(newBeat: bpmThreadSafe)
+                self.beatFilter.setBPM(bpm: bpmThreadSafe)
+                
+                let (lowThreshold, highThreshold) = self.autoCalibrator.getThresholds()
+                let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
+                
+                // debug for now?
+                print("bpmRaw: \(Int(bpmThreadSafe))  bpmSmoothed: \(Int(currentBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
+                // future feature:
+                // if generalStressScore is x above high threshold, start turning off lights etc.
+                // later, change to self.activeLightModPairs
+                
+                // let generalStressScore = LightModifier.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
+                
+                for pair in self.allLightModPairs {
+                    
+                    // (rgb, brightness, duration)
+                    let mod = pair.mod.modifyBeat(currentBPM, previousBPM, lowThreshold, highThreshold)
+                    
+                    self.lightInstructions(to: pair.light, with: mod)
+                    
+                } // for pair in...
+                
+            } // self.beatEmulator.beat
+        }
+        
         
     }
     
@@ -176,6 +180,8 @@ class Coordinator {
     func beatInstructions(instructions: Instructions) {
         self.connectLights() // blocks thread
         
+        sleep(1)
+        
         self.prepareMods() // creates modification object and pairs to that light
         
         for pair in self.allLightModPairs {
@@ -192,9 +198,11 @@ class Coordinator {
             self.lightUnlimitedTCPDeactivate(affecting: pair.light)
         }
         
+        sleep(1)
+        
         // cancel connection
         for pair in self.allLightModPairs {
-            pair.light.limitlessTCP?.conn.cancel()
+            pair.light.tcp.conn.cancel()
         }
         
         // disconnect ble hrm (check, what if not connected already?) - optional
@@ -220,6 +228,14 @@ extension Coordinator {
     
     private func connectLights() {
         self.lightController.discover(wait: .timeoutSeconds(3))
+       
+        /*
+         for (_, light) in  self.lightController.lights {
+         light.printCommunications(true)
+         }
+        */
+        
+        
     }
     
     

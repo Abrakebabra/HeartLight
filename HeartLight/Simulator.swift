@@ -80,7 +80,7 @@ class Simulator {
         self.simulationTimerQueue.async {
             for entry in hrmRecord {
                 self.bpm = entry
-                usleep(UInt32(self.sleepLength * 1000000.0))
+                usleep(UInt32(self.sleepLength * 1_000_000.0))
             }
             
             // run code in closure when simulation is complete

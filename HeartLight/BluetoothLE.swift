@@ -38,7 +38,9 @@ import CoreBluetooth
 class BLEController: CBCentralManager {
     
     var btQueue = DispatchQueue(label: "BT Queue")
+    var workingQueue = DispatchQueue(label: "Working Queue")
     
+    var hrmConnected: (() -> Void)?
     var bpmReceived: ((Int) -> Void)?
     
     var bpm: Int? {
@@ -88,6 +90,7 @@ class BLEController: CBCentralManager {
         cManager.stopScan()
         cManager.connect(hrm)
         print("Connected to HRM!")
+        self.hrmConnected?()    // notify outside of class that a connection has been made
     }
     
     
@@ -103,7 +106,10 @@ class BLEController: CBCentralManager {
     
     
     func onHeartRateReceived(_ heartRate: Int) {
-        self.bpm = heartRate
+        self.workingQueue.async {
+            self.bpm = heartRate
+        }
+        
     }
     
     
