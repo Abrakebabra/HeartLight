@@ -110,9 +110,13 @@ class Coordinator {
             self.simulator.simulate()
         }
         
+        
         self.bleController.hrmConnected = {
+            (connectionMessage) in
+            print(connectionMessage)
             self.beatEmulator.start()
         }
+        
         
         self.dispatchQueue.async {
             self.beatEmulator.beat = {
