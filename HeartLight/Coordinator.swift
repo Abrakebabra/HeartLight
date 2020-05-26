@@ -129,7 +129,11 @@ class Coordinator {
                 let (currentBPM, previousBPM) = self.beatFilter.getFilteredBPM(lowThreshold)
                 
                 // debug for now?
-                print("bpmRaw: \(Int(bpmThreadSafe))  bpmSmoothed: \(Int(currentBPM))  low: \(Int(lowThreshold))  high: \(Int(highThreshold))")
+                let bpmRaw = String(Int(bpmThreadSafe)).padding(toLength: 3, withPad: " ", startingAt: 0)
+                let bpmSmoothed = String(Int(currentBPM)).padding(toLength: 3, withPad: " ", startingAt: 0)
+                let low = String(Int(lowThreshold)).padding(toLength: 3, withPad: " ", startingAt: 0)
+                let high = String(Int(highThreshold)).padding(toLength: 3, withPad: " ", startingAt: 0)
+                print("bpm  Raw \(bpmRaw) | \(bpmSmoothed) Smoothed    Threshold  Low \(low) | \(high) High")
                 // future feature:
                 // if generalStressScore is x above high threshold, start turning off lights etc.
                 // later, change to self.activeLightModPairs
@@ -137,6 +141,11 @@ class Coordinator {
                 // let generalStressScore = LightModifier.stressScore(bpm: currentBPM, lowThreshold, highThreshold)
                 
                 for pair in self.allLightModPairs {
+                    
+                    // if light is off, don't send a signal or do any processing
+                    if pair.light.state.power == false {
+                        continue
+                    }
                     
                     // (rgb, brightness, duration)
                     let mod = pair.mod.modifyBeat(currentBPM, previousBPM, lowThreshold, highThreshold)
