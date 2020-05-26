@@ -65,6 +65,7 @@ class DataCollection {
         
         
         while availableFileName == false {
+            // add a zero so that file names have at least 2 digits
             let stringedIteration = String(format: "%02d", fileIteration)
             let file = "HeartRateData \(stringedIteration).json"
             let checkingURL = directory.appendingPathComponent(file)
@@ -72,6 +73,7 @@ class DataCollection {
             //reading to see if file exists
             do {
                 let _ = try String(contentsOf: checkingURL, encoding: .utf8)
+                // add one more to the iteration and see if that file name is available
                 fileIteration += 1
                 continue
             }
@@ -98,7 +100,9 @@ class DataCollection {
     
     
     func saveToFile() {
-        if self.bpmRecords.count == 0 {
+        
+        // arbitrary choice - wait for at least 2 minutes of data, the same as when the auto calibration would start
+        if self.bpmRecords.count < 120 {
             return
         }
         
