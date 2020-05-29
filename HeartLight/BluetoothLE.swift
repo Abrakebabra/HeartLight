@@ -159,20 +159,14 @@ class BLEController: CBCentralManager {
             
             // if input is a valid self.peripheralList element, confirm connection to that peripheral, then save a reference to the peripheral to the main variable.
             if inputInt >= 0 && inputInt <= self.peripheralList.count - 1 {
+                idLabel = self.peripheralList[inputInt].identifier.uuidString
+                self.findKnownIDs(&idLabel)
                 print("Connect to \(idLabel).  y/n?")
+                
                 if self.confirm() == true {
-                    
-                    // double check valid array element exists
-                    if let validPeripheral = self.peripheralList[safe: inputInt] {
-                        self.heartRatePeripheral = validPeripheral
-                        selectionMade = true
-                        break
-                        
-                    } else {
-                        print("Error: Not a valid peripheral selected")
-                        return
-                    }
-                    
+                    self.heartRatePeripheral = self.peripheralList[inputInt]
+                    selectionMade = true
+                    break
                 }
             } else {
                 print("Not a valid selection, try again")
