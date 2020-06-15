@@ -300,7 +300,9 @@ extension BLEController: CBCentralManagerDelegate {
             print("central.state is .poweredOff")
         case .poweredOn:
             print("Bluetooth module is on.  Searching...")
+            sleep(1)
             guard let cManager = centralManager else {
+                print("centralManager is nil")
                 return
             }
             cManager.scanForPeripherals(withServices: [self.heartRateServiceCBUUID])

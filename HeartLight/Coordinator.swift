@@ -90,9 +90,11 @@ class Coordinator {
     
     /// get bpm directly from saved source.  Set in emulator to execute other instructions at that rate.
     private func receiveFromSavedData() {
-        self.simulator.bpmReceived = {
-            (bpm) in
-            self.beatEmulator.setBPM(bpm)
+        self.dispatchQueue.async {
+            self.simulator.bpmReceived = {
+                (bpm) in
+                self.beatEmulator.setBPM(bpm)
+            }
         }
     }
     
@@ -108,6 +110,7 @@ class Coordinator {
         case .simulation:
             self.receiveFromSavedData()
             self.simulator.simulate()
+            self.beatEmulator.start()
         }
         
         
